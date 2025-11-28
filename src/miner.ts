@@ -1,4 +1,4 @@
-import { fragmentShaderSource, vertexShaderSource } from './shaders';
+import { entityFragmentSource, entityVertexSource } from './shaders';
 import './style.css'
 
 import * as webglUtils from "./utils/webgl.js";
@@ -7,35 +7,32 @@ import t from "./assets/atlas.png";
 
 // BLOCK TYPES
 type Vec2D = [number, number];
-type WorldBinds = {
+type MinerBinds = {
     position: number,
     atlas: number,
-    tileW: WebGLUniformLocation,
-    tileX: WebGLUniformLocation,
+    move: WebGLUniformLocation,
     camera: WebGLUniformLocation,
     resolution: WebGLUniformLocation,
 };
 
 const ATLAS_IMAGE_NUM = 2; // number of textures in our atlas
 const SINGLE_ATLAS_TEX_W = 1 / ATLAS_IMAGE_NUM;
+let time = 0;
 
-export class World {
-    private size: number;
+export class Miner {
     private tileWidth: number;
     private indices: Uint16Array;
     private positions: Float32Array;
 
-    private binds: WorldBinds | undefined;
+    private binds: MinerBinds | undefined;
     private program: WebGLProgram | undefined;
     private vao: WebGLVertexArrayObject | undefined;
     private vbo: WebGLBuffer | undefined;
     private posBuf: WebGLBuffer | undefined;
 
-    private blockTex: WebGLTexture | undefined;
     private atlas: WebGLTexture | undefined;
 
-    constructor(size: number, tileWidth: number) {
-        this.size = size;
+    constructor(tileWidth: number) {
         this.tileWidth = tileWidth;
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
@@ -47,7 +44,7 @@ export class World {
     }
 
     async init(gl: WebGL2RenderingContext) {
-        const program = webglUtils.createProgramFromSources(gl, [vertexShaderSource, fragmentShaderSource]);
+        const program = webglUtils.createProgramFromSources(gl, [entityVertexSource, entityFragmentSource]);
 
         if (!program) {
             throw new Error("No program");
@@ -57,18 +54,17 @@ export class World {
         // look up where the vertex data needs to go.
         const binds = {
             position: gl.getAttribLocation(program, "a_position"),
+            move: gl.getUniformLocation(program, "u_movement"),
             atlas: gl.getAttribLocation(program, "a_texcoord"),
-            tileW: gl.getUniformLocation(program, "tileW"),
-            tileX: gl.getUniformLocation(program, "tileX"),
             camera: gl.getUniformLocation(program, "camera"),
             resolution: gl.getUniformLocation(program, "u_resolution")
         };
 
-        if (binds.camera === null || binds.position === null || binds.resolution === null || binds.tileW === null || binds.tileX === null || binds.atlas === null) {
+        if (binds.camera === null || binds.position === null || binds.resolution === null || binds.move === null || binds.atlas === null) {
             throw new Error("Bad binds");
         }
 
-        this.binds = binds as WorldBinds;
+        this.binds = binds as MinerBinds;
 
         // Create a buffer and put a single pixel space rectangle in
         // it (2 triangles)
@@ -121,33 +117,6 @@ export class World {
 
         this.atlas = await loadTexture(gl, t);
 
-        this.blockTex = gl.createTexture() ?? undefined;
-        if (!this.blockTex) {
-            throw new Error("No block texture");
-        }
-        gl.bindTexture(gl.TEXTURE_2D, this.blockTex);
-
-        const bTypes = new Int32Array(this.size * this.size).fill(1).map(
-            (_, idx) => {
-                const col = idx % this.size;
-                const row = Math.floor(idx / this.size);
-                if (col === 0 || col === (this.size - 1)) {
-                    return 1;
-                }
-                if (row === 0 || row === (this.size - 1)) {
-                    return 1;
-                }
-                return 0;
-            }
-        );
-
-        gl.texImage2D(
-            gl.TEXTURE_2D, 0, gl.R32I, this.size, this.size, 0, gl.RED_INTEGER,
-            gl.INT, bTypes
-        );
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
         gl.bindTexture(gl.TEXTURE_2D, null);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -155,9 +124,11 @@ export class World {
     }
 
     render(gl: WebGL2RenderingContext, camera: Vec2D) {
-        if (!this.binds || !this.program || !this.vao || !this.blockTex || !this.vbo || !this.posBuf || !this.atlas) {
+        if (!this.binds || !this.program || !this.vao || !this.vbo || !this.posBuf || !this.atlas) {
             return;
         }
+
+        webglUtils.resizeCanvasToDisplaySize(gl.canvas as HTMLCanvasElement);
 
         // Tell it to use our program (pair of shaders)
         gl.useProgram(this.program);
@@ -166,25 +137,20 @@ export class World {
         gl.bindVertexArray(this.vao);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vbo);
 
-        gl.uniform1i(this.binds.tileW, this.tileWidth);
-        gl.uniform1i(this.binds.tileX, this.size);
-
         // block type texture
         gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this.blockTex);
-        gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.atlas);
-        gl.uniform1i(gl.getUniformLocation(this.program, "u_data"), 0);
-        gl.uniform1i(gl.getUniformLocation(this.program, "u_texture"), 1);
+        gl.uniform1i(gl.getUniformLocation(this.program, "u_texture"), 0);
 
         gl.uniform2fv(this.binds.camera, [-camera[0], -camera[1]]);
+        gl.uniform2fv(this.binds.move, [time += 0.05, 10]);
 
         // Pass in the canvas resolution so we can convert from
         // pixels to clipspace in the shader
         gl.uniform2f(this.binds.resolution, gl.canvas.width, gl.canvas.height);
 
         // draw
-        gl.drawElementsInstanced(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT,0, this.size * this.size);
+        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     }
 }
 
@@ -194,9 +160,6 @@ const loadTexture = async (gl: WebGL2RenderingContext, img: string): Promise<Web
         throw new Error("Invalid texture");
     }
     gl.bindTexture(gl.TEXTURE_2D, tex);
-
-    // fake texture
-//    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 255, 255]));
 
     const image = new Image();
     image.src = img;

@@ -66,3 +66,59 @@ void main() {
   vec2 tcoord = vec2(v_texcoord.x + (0.5 * b_type), v_texcoord.y);
   outColor = texture(u_texture, tcoord);
 }`;
+
+export const entityVertexSource = `#version 300 es
+
+// an attribute is an input (in) to a vertex shader.
+// It will receive data from a buffer
+
+in vec2 a_position;
+in vec2 a_texcoord;
+
+uniform vec2 camera;
+uniform vec2 u_movement;
+
+// Used to pass in the resolution of the canvas
+uniform vec2 u_resolution;
+
+out vec2 v_texcoord;
+out float b_type;
+
+// all shaders have a main function
+void main() {
+
+  vec2 instPos = vec2(a_position);
+  instPos.x += a_position.x + camera.x + u_movement.x;
+  instPos.y += a_position.y + camera.y + u_movement.y;
+
+  // convert the position from pixels to 0.0 to 1.0
+  vec2 zeroToOne = instPos / u_resolution;
+
+  // convert from 0->1 to 0->2
+  vec2 zeroToTwo = zeroToOne * 2.0;
+
+  // convert from 0->2 to -1->+1 (clipspace)
+  vec2 clipSpace = zeroToTwo - 1.0;
+
+  gl_Position = vec4(clipSpace, 0, 1);
+
+  v_texcoord = a_texcoord;
+}
+`;
+
+export const entityFragmentSource = `#version 300 es
+
+precision highp float;
+
+// Passed in from the vertex shader.
+in vec2 v_texcoord;
+
+// The texture.
+uniform sampler2D u_texture;
+
+// we need to declare an output for the fragment shader
+out vec4 outColor;
+
+void main() {
+  outColor = texture(u_texture, v_texcoord);
+}`;
