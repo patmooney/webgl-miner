@@ -1,3 +1,45 @@
 canvas#c {
-    border: solid 1px #888;
+    width: 800px;
+}
+
+div#console {
+    background-color: black;
+    box-sizing: border-box;
+    width: 800px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    font-family: "Rubik Dirt", system-ui;
+}
+
+div#console > div#output {
+    flex: 1;
+    overflow-y: auto;
+    white-space: pre;
+}
+
+div.bang {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+    border-top: solid 1px white;
+    color: green;
+    font-weight: 500;
+    padding: .5rem;
+    gap: .5rem;
+}
+
+div.bang > input {
+    flex: 1;
+    background-color: black;
+    border: none;
+    color: green;
+    font-weight: bold;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none;
 }

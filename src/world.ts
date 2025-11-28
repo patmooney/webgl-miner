@@ -6,7 +6,7 @@ import * as webglUtils from "./utils/webgl.js";
 import t from "./assets/atlas.png";
 
 // BLOCK TYPES
-type Vec2D = [number, number];
+export type Vec2D = [number, number];
 type WorldBinds = {
     position: number,
     atlas: number,
@@ -16,8 +16,8 @@ type WorldBinds = {
     resolution: WebGLUniformLocation,
 };
 
-const ATLAS_IMAGE_NUM = 2; // number of textures in our atlas
-const SINGLE_ATLAS_TEX_W = 1 / ATLAS_IMAGE_NUM;
+const ATLAS_IMAGE_NUM = 3; // number of textures in our atlas
+const SATW = 1 / ATLAS_IMAGE_NUM;
 
 export class World {
     private size: number;
@@ -39,10 +39,10 @@ export class World {
         this.tileWidth = tileWidth;
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
-            0, 0, 0, 0,
-            0, this.tileWidth, SINGLE_ATLAS_TEX_W, 0,
-            this.tileWidth, 0, 0, SINGLE_ATLAS_TEX_W,
-            this.tileWidth, this.tileWidth, SINGLE_ATLAS_TEX_W, SINGLE_ATLAS_TEX_W
+            0, 0, 0, 1,
+            0, this.tileWidth, 0, 0,
+            this.tileWidth, 0, SATW, 1,
+            this.tileWidth, this.tileWidth, SATW, 0
         ]);
     }
 
@@ -127,17 +127,13 @@ export class World {
         }
         gl.bindTexture(gl.TEXTURE_2D, this.blockTex);
 
+        const lDelta = (this.size / 2) - 3;
+        const uDelta = (this.size / 2) + 3;
         const bTypes = new Int32Array(this.size * this.size).fill(1).map(
             (_, idx) => {
                 const col = idx % this.size;
                 const row = Math.floor(idx / this.size);
-                if (col === 0 || col === (this.size - 1)) {
-                    return 1;
-                }
-                if (row === 0 || row === (this.size - 1)) {
-                    return 1;
-                }
-                return 0;
+                return (row >= lDelta && row <= uDelta && col >= lDelta && col <= uDelta) ? 0 : 1;
             }
         );
 

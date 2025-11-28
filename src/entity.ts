@@ -7,7 +7,7 @@ import t from "./assets/atlas.png";
 
 // BLOCK TYPES
 type Vec2D = [number, number];
-type MinerBinds = {
+type EntityBinds = {
     position: number,
     atlas: number,
     move: WebGLUniformLocation,
@@ -15,16 +15,18 @@ type MinerBinds = {
     resolution: WebGLUniformLocation,
 };
 
-const ATLAS_IMAGE_NUM = 2; // number of textures in our atlas
-const SINGLE_ATLAS_TEX_W = 1 / ATLAS_IMAGE_NUM;
-let time = 0;
+const ATLAS_IMAGE_NUM = 3; // number of textures in our atlas
+const SATW = 1 / ATLAS_IMAGE_NUM;
 
-export class Miner {
+export class Entity {
+
+    private coords: Vec2D;
+
     private tileWidth: number;
     private indices: Uint16Array;
     private positions: Float32Array;
 
-    private binds: MinerBinds | undefined;
+    private binds: EntityBinds | undefined;
     private program: WebGLProgram | undefined;
     private vao: WebGLVertexArrayObject | undefined;
     private vbo: WebGLBuffer | undefined;
@@ -36,11 +38,12 @@ export class Miner {
         this.tileWidth = tileWidth;
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
-            0, 0, 0, 0,
-            0, this.tileWidth, SINGLE_ATLAS_TEX_W, 0,
-            this.tileWidth, 0, 0, SINGLE_ATLAS_TEX_W,
-            this.tileWidth, this.tileWidth, SINGLE_ATLAS_TEX_W, SINGLE_ATLAS_TEX_W
+            0, 0, SATW*2, 0,
+            0, this.tileWidth / 2, SATW*3, 0,
+            this.tileWidth / 2, 0, SATW*2, SATW*3,
+            this.tileWidth / 2, this.tileWidth / 2, SATW*3, SATW*3
         ]);
+        this.coords = [500, 500];
     }
 
     async init(gl: WebGL2RenderingContext) {
@@ -64,7 +67,7 @@ export class Miner {
             throw new Error("Bad binds");
         }
 
-        this.binds = binds as MinerBinds;
+        this.binds = binds as EntityBinds;
 
         // Create a buffer and put a single pixel space rectangle in
         // it (2 triangles)
@@ -123,6 +126,10 @@ export class Miner {
         gl.bindVertexArray(null);
     }
 
+    update(move: Vec2D) {
+        this.coords = move;
+    }
+
     render(gl: WebGL2RenderingContext, camera: Vec2D) {
         if (!this.binds || !this.program || !this.vao || !this.vbo || !this.posBuf || !this.atlas) {
             return;
@@ -143,7 +150,7 @@ export class Miner {
         gl.uniform1i(gl.getUniformLocation(this.program, "u_texture"), 0);
 
         gl.uniform2fv(this.binds.camera, [-camera[0], -camera[1]]);
-        gl.uniform2fv(this.binds.move, [time += 0.05, 10]);
+        gl.uniform2fv(this.binds.move, this.coords);
 
         // Pass in the canvas resolution so we can convert from
         // pixels to clipspace in the shader
