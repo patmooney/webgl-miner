@@ -13,12 +13,15 @@ type EntityBinds = {
     move: WebGLUniformLocation,
     camera: WebGLUniformLocation,
     resolution: WebGLUniformLocation,
+    rotation: WebGLUniformLocation,
 };
 
 const ATLAS_IMAGE_NUM = 3; // number of textures in our atlas
 const SATW = 1 / ATLAS_IMAGE_NUM;
 
 export class Entity {
+    rotation: Vec2D = [0, 1];
+    angle: number = (270 * Math.PI) / 180.0;
 
     private coords: Vec2D;
 
@@ -39,9 +42,9 @@ export class Entity {
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
             0, 0, SATW*2, 0,
-            0, this.tileWidth / 2, SATW*3, 0,
-            this.tileWidth / 2, 0, SATW*2, SATW*3,
-            this.tileWidth / 2, this.tileWidth / 2, SATW*3, SATW*3
+            0, this.tileWidth, SATW*3, 0,
+            this.tileWidth, 0, SATW*2, SATW*3,
+            this.tileWidth, this.tileWidth, SATW*3, SATW*3
         ]);
         this.coords = [500, 500];
     }
@@ -60,7 +63,8 @@ export class Entity {
             move: gl.getUniformLocation(program, "u_movement"),
             atlas: gl.getAttribLocation(program, "a_texcoord"),
             camera: gl.getUniformLocation(program, "camera"),
-            resolution: gl.getUniformLocation(program, "u_resolution")
+            resolution: gl.getUniformLocation(program, "u_resolution"),
+            rotation: gl.getUniformLocation(program, "u_rotation")
         };
 
         if (binds.camera === null || binds.position === null || binds.resolution === null || binds.move === null || binds.atlas === null) {
@@ -127,7 +131,10 @@ export class Entity {
     }
 
     update(move: Vec2D) {
-        this.coords = move;
+        this.angle = move[0];
+        this.rotation[0] = Math.sin(this.angle);
+        this.rotation[1] = Math.cos(this.angle);
+    //    this.coords = move;
     }
 
     render(gl: WebGL2RenderingContext, camera: Vec2D) {
@@ -151,6 +158,7 @@ export class Entity {
 
         gl.uniform2fv(this.binds.camera, [-camera[0], -camera[1]]);
         gl.uniform2fv(this.binds.move, this.coords);
+        gl.uniform2fv(this.binds.rotation, this.rotation);
 
         // Pass in the canvas resolution so we can convert from
         // pixels to clipspace in the shader

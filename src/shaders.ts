@@ -77,6 +77,7 @@ in vec2 a_texcoord;
 
 uniform vec2 camera;
 uniform vec2 u_movement;
+uniform vec2 u_rotation;
 
 // Used to pass in the resolution of the canvas
 uniform vec2 u_resolution;
@@ -87,12 +88,25 @@ out float b_type;
 // all shaders have a main function
 void main() {
 
-  vec2 instPos = vec2(a_position);
-  instPos.x += a_position.x + camera.x + u_movement.x;
-  instPos.y += a_position.y + camera.y + u_movement.y;
+  // 10.0 is half of tileW, because we need to offset for rotation to center of tile
+  vec2 p = a_position;
+  p.x -= 10.0;
+  p.y -= 10.0;
+
+  vec2 rotated = vec2(
+    p.x * u_rotation.y +
+        p.y * u_rotation.x,
+    p.y * u_rotation.y -
+        p.x * u_rotation.x
+  );
+
+  rotated += 10.0;
+  rotated += 10.0;
+
+  rotated += camera + u_movement;
 
   // convert the position from pixels to 0.0 to 1.0
-  vec2 zeroToOne = instPos / u_resolution;
+  vec2 zeroToOne = rotated / u_resolution;
 
   // convert from 0->1 to 0->2
   vec2 zeroToTwo = zeroToOne * 2.0;
