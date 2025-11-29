@@ -1,8 +1,10 @@
 import { Entity } from './entity.js';
+import { initMouse } from './input.js';
+import { state } from './state.js';
 import './style.css'
 import * as webglUtils from "./utils/webgl.js";
 
-import { World, type Vec2D } from './world.js';
+import { World } from './world.js';
 
 const size = 50;
 const tileW = 20;
@@ -11,10 +13,12 @@ const loop = async (gl: WebGL2RenderingContext) => {
     const w = new World(size, tileW);
     const e = new Entity(tileW);
 
+    state.camera = [(size/8) * tileW, (size/5) * tileW];
+
+    initMouse();
     await e.init(gl);
     await w.init(gl);
 
-    const camera: Vec2D = [(size/8) * tileW, (size/5) * tileW];
     let time = 0;
 
     while(true) {
@@ -28,13 +32,13 @@ const loop = async (gl: WebGL2RenderingContext) => {
             gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
             // Clear the canvas
-            gl.clearColor(0, 0, 0, 0);
+            gl.clearColor(0.2, 0.2, 0.2, 1);
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-            w.render(gl, camera);
-            e.render(gl, camera);
+            w.render(gl, state.camera);
+            e.render(gl, state.camera);
             finishRender();
         }));
     }
@@ -43,6 +47,7 @@ const loop = async (gl: WebGL2RenderingContext) => {
 const run = () => {
     const canvas = document.querySelector("#c") as HTMLCanvasElement;
     const gl = canvas.getContext("webgl2", { premultipliedAlpha: false });
+
     if (!gl) {
         return;
     }
