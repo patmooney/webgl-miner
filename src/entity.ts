@@ -4,6 +4,7 @@ import './style.css'
 import * as webglUtils from "./utils/webgl.js";
 
 import t from "./assets/atlas.png";
+import type { Action } from './actions.js';
 
 // BLOCK TYPES
 type Vec2D = [number, number];
@@ -19,11 +20,25 @@ type EntityBinds = {
 const ATLAS_IMAGE_NUM = 3; // number of textures in our atlas
 const SATW = 1 / ATLAS_IMAGE_NUM;
 
+const ANGLE_TO_RAD: Record<number, number> = {
+    0: (0 * Math.PI) / 180.0, // right
+    1: (90 * Math.PI) / 180.0, // down
+    2: (180 * Math.PI) / 180.0, // left
+    3: (270 * Math.PI) / 180.0 // up
+};
+const FULL_ROTATION = (360 * Math.PI) / 180.0;
+
 export class Entity {
+    id: number;
+
     rotation: Vec2D = [0, 1];
-    angle: number = (270 * Math.PI) / 180.0;
+    private rad: number = ANGLE_TO_RAD[3];
+    angle: number = 3;
+
+    private target: Vec2D | undefined;
 
     private coords: Vec2D;
+    private tile: Vec2D;
 
     private tileWidth: number;
     private indices: Uint16Array;
@@ -37,7 +52,8 @@ export class Entity {
 
     private atlas: WebGLTexture | undefined;
 
-    constructor(tileWidth: number) {
+    constructor(id: number, tileWidth: number) {
+        this.id = id;
         this.tileWidth = tileWidth;
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
@@ -47,6 +63,7 @@ export class Entity {
             this.tileWidth, this.tileWidth, SATW*3, SATW*3
         ]);
         this.coords = [500, 500];
+        this.tile = [50, 50];
     }
 
     async init(gl: WebGL2RenderingContext) {
@@ -130,11 +147,65 @@ export class Entity {
         gl.bindVertexArray(null);
     }
 
-    update(move: Vec2D) {
-        this.angle = move[0];
-        this.rotation[0] = Math.sin(this.angle);
-        this.rotation[1] = Math.cos(this.angle);
-    //    this.coords = move;
+    update(action?: Action) {
+        let rDelta = 0;
+        let delta = [0, 0];
+        let targetR: number | undefined;
+
+        if (action?.type === "MOVE") {
+            if (this.angle === 3) {
+                console.log(`Moving ${action.value} up`);
+                delta = [0, 0.05];
+            }
+            if (this.angle === 0) {
+                console.log(`Moving ${action.value} right`);
+                delta = [0.05, 0];
+            }
+            if (this.angle === 1) {
+                console.log(`Moving ${action.value} down`);
+                delta = [0, -0.05];
+            }
+            if (this.angle === 2) {
+                console.log(`Moving ${action.value} left`);
+                delta = [-0.05, 0];
+            }
+        }
+
+        if (action?.type === "ROTATE" && (action.value ?? 0) !== 0) {
+            targetR = this.angle + action.value!;
+            if (targetR < 0) {
+                targetR = 4 + targetR;
+            }
+            if (targetR > 3) {
+                targetR = targetR - 4;
+            }
+            if (action.value! < 0) {
+                let rad = (this.rad < ANGLE_TO_RAD[targetR]) ? this.rad + FULL_ROTATION : this.rad;
+                rDelta = -0.05;
+                if ((rad + rDelta) <= ANGLE_TO_RAD[targetR]) {
+                    action.complete();
+                }
+            } else {
+                let rad = (this.rad > ANGLE_TO_RAD[targetR]) ? this.rad - FULL_ROTATION : this.rad;
+                rDelta = 0.05;
+                if ((rad + rDelta) >= ANGLE_TO_RAD[targetR]) {
+                    action.complete();
+                }
+            }
+            if (action.isComplete) {
+                this.rad = ANGLE_TO_RAD[targetR];
+                this.angle = targetR;
+            } else {
+                this.rad += rDelta;
+            }
+        }
+
+        this.rotation[0] = Math.sin(this.rad);
+        this.rotation[1] = Math.cos(this.rad);
+
+        if (delta) {
+            this.coords = [this.coords[0] + delta[0], this.coords[1] + delta[1]];
+        }
     }
 
     render(gl: WebGL2RenderingContext, camera: Vec2D) {

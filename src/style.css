@@ -21,6 +21,15 @@ div#console > div#output {
     flex: 1;
     overflow-y: auto;
     white-space: pre;
+    box-sizing: border-box;
+    padding: .5rem;
+    font-family: courier;
+    color: green;
+}
+div#output > p {
+    padding: 0;
+    margin: 0;
+    line-height: 1rem;
 }
 
 div.bang {
