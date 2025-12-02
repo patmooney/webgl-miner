@@ -1,7 +1,8 @@
 import { size } from "./constants";
+import { updateMap, type MapUpdate } from "./map";
 import type { Vec2D } from "./world";
 
-export type ActionType = "ROTATE" | "MOVE";
+export type ActionType = "ROTATE" | "MOVE" | "MINE";
 
 export interface IAction {
     delta?: Vec2D;
@@ -45,9 +46,11 @@ export class Action implements IAction {
 
 export class Actions {
     stack: Action[];
+    mapUpdates: MapUpdate[];
 
     constructor() {
         this.stack = [];
+        this.mapUpdates = [];
     }
     getActions() {
         const now = Date.now();
@@ -60,5 +63,14 @@ export class Actions {
     addAction(type: ActionType, { delta, value, timeEnd, entityId }: IAction) {
         const a = new Action(type, { delta, value, timeEnd, entityId });
         this.stack.push(a);
+    }
+    getMapUpdates() {
+        const toReturn = [...this.mapUpdates];
+        this.mapUpdates = [];
+        return toReturn;
+    }
+    addMapUpdate(update: MapUpdate) {
+        this.mapUpdates.push(update);
+        updateMap(update);
     }
 }

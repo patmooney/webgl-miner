@@ -63,8 +63,12 @@ uniform sampler2D u_texture;
 out vec4 outColor;
 
 void main() {
-  vec2 tcoord = vec2(v_texcoord.x + (0.33 * b_type), v_texcoord.y);
-  outColor = texture(u_texture, tcoord);
+  if (b_type < 0.0) {
+    outColor = vec4(0.0, 0.0, 0.0, 0.92);
+  } else {
+    vec2 tcoord = vec2(v_texcoord.x + (0.33 * b_type), v_texcoord.y);
+    outColor = texture(u_texture, tcoord);
+  }
 }`;
 
 export const entityVertexSource = `#version 300 es

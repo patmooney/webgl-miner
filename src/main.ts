@@ -17,7 +17,7 @@ const output = document.querySelector('#console div#output');
 const loop = async (gl: WebGL2RenderingContext) => {
     const w = new World();
 
-    entities.push(new Entity(entities.length, "MINER", ["ROTATE", "MOVE"]));
+    entities.push(new Entity(entities.length, "MINER", ["ROTATE", "MOVE", "MINE"]));
 
     state.camera = [((size/2) - 9) * tileW, ((size/2) - 6) * tileW];
 
@@ -77,6 +77,7 @@ const loop = async (gl: WebGL2RenderingContext) => {
                 const action = actions.find((a) => a.entityId === e.id);
                 e.update(action);
             }
+            w.update(gl, state.actions.getMapUpdates())
 
             webglUtils.resizeCanvasToDisplaySize(gl.canvas as HTMLCanvasElement);
             // Tell WebGL how to convert from clip space to pixels
@@ -170,19 +171,21 @@ ${selected.actions.map((act) => ` - ${act.toLowerCase()}`).join("\n")}
 };
 
 const entityCommand = (cmd: string, value: string): boolean | undefined => {
+    const selected = state.selectedEntity !== undefined ? entities.find((e) => e.id === state.selectedEntity) : undefined;
+    if (!selected) {
+        return false;
+    }
+
     const addAction = (action: ActionType) => {
-        if (state.selectedEntity === undefined) {
-            return false;
-        }
-        state.actions.addAction(action, { entityId: state.selectedEntity, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) });
+        state.actions.addAction(action, { entityId: selected.id, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) });
         return true;
     };
 
-    switch (cmd) {
-        case "move": return addAction("MOVE");
-        case "rotate": return addAction("ROTATE");
-        default: return undefined;
-    };
+    if (selected.actions.includes(cmd.toUpperCase() as ActionType)) {
+        return addAction(cmd.toUpperCase() as ActionType);
+    }
+
+    return undefined;
 };
 
 const metaCommand = (cmd: string, value: string): boolean | undefined => {

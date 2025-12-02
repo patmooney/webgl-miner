@@ -1,5 +1,5 @@
 import type { Entity } from "../entity";
-import { tileW, CARDINAL_MAP, type Vec2D } from "../constants";
+import { tileW, CARDINAL_MAP, type Vec2D, type Angle } from "../constants";
 import type { Action } from "../actions";
 import { coordToTile, getTileAt } from "../map";
 import { clamp } from "../utils/maths";
@@ -41,7 +41,7 @@ export const command_Move = function(this: Entity, action: Action) {
     }
 }
 
-const getMaxMove = (moves: number, angle: number, coords: Vec2D) => {
+const getMaxMove = (moves: number, angle: Angle, coords: Vec2D) => {
     let delta: Vec2D = [0, 0];
     if (angle === CARDINAL_MAP.DOWN) {
         delta = [0, -tileW];

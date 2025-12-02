@@ -5,7 +5,7 @@ import * as webglUtils from "./utils/webgl.js";
 
 import t from "./assets/atlas.png";
 import { size, tileW } from './constants.js';
-import { getMap } from './map.js';
+import { getMap, type MapUpdate } from './map.js';
 import { state } from './state.js';
 
 // BLOCK TYPES
@@ -139,6 +139,18 @@ export class World {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindVertexArray(null);
+    }
+
+    update(gl: WebGL2RenderingContext, updates?: MapUpdate[]) {
+        if (updates?.length && this.blockTex) {
+            gl.bindTexture(gl.TEXTURE_2D, this.blockTex);
+            updates.forEach(
+                (update) => {
+                    gl.texSubImage2D(gl.TEXTURE_2D, 0, update.tile[1], update.tile[0], 1, 1, gl.RED_INTEGER, gl.INT, new Int32Array([update.type]))
+                }
+            );
+            gl.bindTexture(gl.TEXTURE_2D, null);
+        }
     }
 
     render(gl: WebGL2RenderingContext, camera: Vec2D) {

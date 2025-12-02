@@ -5,7 +5,7 @@ import * as webglUtils from "./utils/webgl.js";
 
 import t from "./assets/atlas.png";
 import type { Action, ActionType } from './actions.js';
-import { tileW, size, ANGLE_TO_RAD, SATW } from './constants';
+import { tileW, size, ANGLE_TO_RAD, SATW, type Angle } from './constants';
 import { runAction } from './commands/index.js';
 import { state } from './state.js';
 
@@ -31,7 +31,7 @@ export class Entity {
 
     rotation: Vec2D = [0, 1];
     rad: number = ANGLE_TO_RAD[3];
-    angle: number = 3;
+    angle: Angle = 3;
 
     target: Vec2D | undefined;
     targetR: number | undefined;
