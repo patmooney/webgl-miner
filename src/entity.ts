@@ -7,6 +7,7 @@ import t from "./assets/atlas.png";
 import type { Action, ActionType } from './actions.js';
 import { tileW, size, ANGLE_TO_RAD, SATW } from './constants';
 import { runAction } from './commands/index.js';
+import { state } from './state.js';
 
 // BLOCK TYPES
 type Vec2D = [number, number];
@@ -20,8 +21,11 @@ type EntityBinds = {
     tileW: WebGLUniformLocation,
 };
 
+export type EntityType = "MINER";
+
 export class Entity {
     id: number;
+    type: EntityType;
 
     actions: ActionType[];
 
@@ -46,7 +50,7 @@ export class Entity {
 
     atlas: WebGLTexture | undefined;
 
-    constructor(id: number, actions: ActionType[] = ["MOVE", "ROTATE"]) {
+    constructor(id: number, type: EntityType, actions: ActionType[] = ["MOVE", "ROTATE"]) {
         this.id = id;
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
@@ -59,6 +63,7 @@ export class Entity {
         this.rotation[0] = Math.sin(this.rad);
         this.rotation[1] = Math.cos(this.rad);
         this.actions = actions;
+        this.type = type;
     }
 
     async init(gl: WebGL2RenderingContext) {
@@ -135,7 +140,7 @@ export class Entity {
         // Pass the vertex data to the buffer
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
 
-        this.atlas = await loadTexture(gl, t);
+        this.atlas = await webglUtils.loadTexture(gl, t);
 
         gl.bindTexture(gl.TEXTURE_2D, null);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
@@ -175,31 +180,9 @@ export class Entity {
 
         // Pass in the canvas resolution so we can convert from
         // pixels to clipspace in the shader
-        gl.uniform2f(this.binds.resolution, gl.canvas.width, gl.canvas.height);
+        gl.uniform2f(this.binds.resolution, ...state.resolution(gl));
 
         // draw
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     }
-}
-
-const loadTexture = async (gl: WebGL2RenderingContext, img: string): Promise<WebGLTexture> => {
-    const tex = gl.createTexture() ?? undefined;
-    if (!tex) {
-        throw new Error("Invalid texture");
-    }
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-
-    const image = new Image();
-    image.src = img;
-
-    return new Promise((resolve) => {
-        image.onload = () => {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-            resolve(tex);
-        };
-    });
 }

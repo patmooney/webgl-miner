@@ -6,6 +6,7 @@ import * as webglUtils from "./utils/webgl.js";
 import t from "./assets/atlas.png";
 import { size, tileW } from './constants.js';
 import { getMap } from './map.js';
+import { state } from './state.js';
 
 // BLOCK TYPES
 export type Vec2D = [number, number];
@@ -117,7 +118,7 @@ export class World {
         // Pass the vertex data to the buffer
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.STATIC_DRAW);
 
-        this.atlas = await loadTexture(gl, t);
+        this.atlas = await webglUtils.loadTexture(gl, t);
 
         this.blockTex = gl.createTexture() ?? undefined;
         if (!this.blockTex) {
@@ -167,34 +168,9 @@ export class World {
 
         // Pass in the canvas resolution so we can convert from
         // pixels to clipspace in the shader
-        gl.uniform2f(this.binds.resolution, gl.canvas.width, gl.canvas.height);
+        gl.uniform2f(this.binds.resolution, ...state.resolution(gl));
 
         // draw
         gl.drawElementsInstanced(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT,0, size * size);
     }
-}
-
-const loadTexture = async (gl: WebGL2RenderingContext, img: string): Promise<WebGLTexture> => {
-    const tex = gl.createTexture() ?? undefined;
-    if (!tex) {
-        throw new Error("Invalid texture");
-    }
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-
-    // fake texture
-//    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 255, 255]));
-
-    const image = new Image();
-    image.src = img;
-
-    return new Promise((resolve) => {
-        image.onload = () => {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-            resolve(tex);
-        };
-    });
 }

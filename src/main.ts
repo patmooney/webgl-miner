@@ -16,7 +16,8 @@ const output = document.querySelector('#console div#output');
 
 const loop = async (gl: WebGL2RenderingContext) => {
     const w = new World();
-    entities.push(new Entity(entities.length));
+
+    entities.push(new Entity(entities.length, "MINER", ["ROTATE", "MOVE"]));
 
     state.camera = [(size/8) * tileW, (size/5) * tileW];
 

@@ -94,45 +94,65 @@ export function createProgram(
     if (!linked) {
         // something went wrong with the link
         const lastError = gl.getProgramInfoLog(program);
-        errFn(`Error in program linking: ${lastError}\n${
-            shaders.map(shader => {
-                const src = addLineNumbersWithError(gl.getShaderSource(shader) ?? "");
-                const type = gl.getShaderParameter(shader, gl.SHADER_TYPE);
-                return `${type}:\n${src}`;
-            }).join('\n')
-        }`);
-
-            gl.deleteProgram(program);
-            return null;
-        }
-            return program;
-        }
-
-    const defaultShaderType = [
-        "VERTEX_SHADER",
-        "FRAGMENT_SHADER",
-    ];
-
-    export function createProgramFromSources(
-        gl: WebGLRenderingContext, shaderSources: string[], opt_attribs: string[] = [],
-        opt_locations: number[] = [], opt_errorCallback: (err: string) => void = () => {}
-    ) {
-        const shaders = [];
-        for (let ii = 0; ii < shaderSources.length; ++ii) {
-            shaders.push(loadShader(
-                gl, shaderSources[ii], gl[defaultShaderType[ii] as keyof typeof gl] as number, opt_errorCallback));
-        }
-        return createProgram(gl, shaders.filter(Boolean) as WebGLShader[], opt_attribs, opt_locations, opt_errorCallback);
+        const lines = shaders.map(shader => {
+            const src = addLineNumbersWithError(gl.getShaderSource(shader) ?? "");
+            const type = gl.getShaderParameter(shader, gl.SHADER_TYPE);
+            return `${type}:\n${src}`;
+        }).join('\n')
+        errFn(`Error in program linking: ${lastError}\n${lines}`);
+        gl.deleteProgram(program);
+        return null;
     }
+    return program;
+}
 
-    export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement, multiplier?: number) {
-        multiplier = multiplier || 1;
-        const width  = canvas.clientWidth  * multiplier | 0;
-        const height = canvas.clientHeight * multiplier | 0;
-        if (canvas.width !== width ||  canvas.height !== height) {
-            canvas.width  = width;
-            canvas.height = height;
-            return true;
-        }
-        return false;
+const defaultShaderType = [
+    "VERTEX_SHADER",
+    "FRAGMENT_SHADER",
+];
+
+export function createProgramFromSources(
+    gl: WebGLRenderingContext, shaderSources: string[], opt_attribs: string[] = [],
+    opt_locations: number[] = [], opt_errorCallback: (err: string) => void = () => {}
+) {
+    const shaders = [];
+    for (let ii = 0; ii < shaderSources.length; ++ii) {
+        shaders.push(loadShader(
+            gl, shaderSources[ii], gl[defaultShaderType[ii] as keyof typeof gl] as number, opt_errorCallback));
     }
+    return createProgram(gl, shaders.filter(Boolean) as WebGLShader[], opt_attribs, opt_locations, opt_errorCallback);
+}
+
+export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement, multiplier?: number) {
+    multiplier = multiplier || 1;
+    const width  = canvas.clientWidth  * multiplier | 0;
+    const height = canvas.clientHeight * multiplier | 0;
+    if (canvas.width !== width ||  canvas.height !== height) {
+        canvas.width  = width;
+        canvas.height = height;
+        return true;
+    }
+    return false;
+}
+
+export const loadTexture = async (gl: WebGL2RenderingContext, img: string): Promise<WebGLTexture> => {
+    const tex = gl.createTexture() ?? undefined;
+    if (!tex) {
+        throw new Error("Invalid texture");
+    }
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+
+    const image = new Image();
+    image.src = img;
+
+    return new Promise((resolve) => {
+        image.onload = () => {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            resolve(tex);
+        };
+    });
+}
