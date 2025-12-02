@@ -1,23 +1,25 @@
 import type { Action } from "../actions";
-import { ANGLE_TO_RAD, FULL_ROTATION } from "../constants";
+import { ANGLE_TO_RAD, FULL_ROTATION, type Angle } from "../constants";
 import type { Entity } from "../entity";
 
 export const command_Rotate = function (this: Entity, action: Action) {
+    let t: number | undefined = this.targetR;
     if (!action.isStarted) {
-        this.targetR = this.angle + action.value!;
-        if (this.targetR < 0) {
-            this.targetR = 4 + this.targetR;
+        t = this.angle + action.value!;
+        if (t < 0) {
+            t = 4 + t;
         }
-        if (this.targetR > 3) {
-            this.targetR = this.targetR - 4;
+        if (t > 3) {
+            t = t - 4;
         }
         action.start();
     }
 
-    if (this.targetR === undefined) {
+    if (t === undefined) {
         action.complete();
         return;
     }
+    this.targetR = t as Angle;
     const targetRad = ANGLE_TO_RAD[this.targetR];
 
     let rDelta = 0;

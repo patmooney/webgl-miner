@@ -34,7 +34,7 @@ export class Entity {
     angle: Angle = 3;
 
     target: Vec2D | undefined;
-    targetR: number | undefined;
+    targetR: Angle | undefined;
 
     coords: Vec2D;
     moveSpeed: number = tileW / 100;
