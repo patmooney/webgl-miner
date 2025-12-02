@@ -1,3 +1,4 @@
+import { size } from "./constants";
 import type { Vec2D } from "./world";
 
 export type ActionType = "ROTATE" | "MOVE";
@@ -28,6 +29,9 @@ export class Action implements IAction {
 
         if (this.type === "ROTATE") {
             this.value = Math.max(Math.min(3, this.value ?? 0), -3);
+        }
+        if (this.type === "MOVE") {
+            this.value = Math.max(0, Math.min(size, value ?? 0));
         }
     }
 

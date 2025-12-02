@@ -33,7 +33,7 @@ export const getTileAt = (coord: Vec2D): number => {
 };
 
 export const coordToTile = (coord: Vec2D): Vec2D => {
-    return [Math.round(coord[0] * tileW), Math.round(coord[1] * tileW)];
+    return [Math.round(coord[0] / tileW), Math.round(coord[1] / tileW)];
 };
 
 let _map: Int32Array | undefined;

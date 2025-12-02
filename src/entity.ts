@@ -4,9 +4,9 @@ import './style.css'
 import * as webglUtils from "./utils/webgl.js";
 
 import t from "./assets/atlas.png";
-import type { Action } from './actions.js';
-import { tileW, size } from './constants';
-import { getTileAt } from './map.js';
+import type { Action, ActionType } from './actions.js';
+import { tileW, size, ANGLE_TO_RAD, SATW } from './constants';
+import { runAction } from './commands/index.js';
 
 // BLOCK TYPES
 type Vec2D = [number, number];
@@ -20,50 +20,33 @@ type EntityBinds = {
     tileW: WebGLUniformLocation,
 };
 
-const ATLAS_IMAGE_NUM = 3; // number of textures in our atlas
-const SATW = 1 / ATLAS_IMAGE_NUM;
-
-type CARDINAL = "UP" | "DOWN" | "LEFT" | "RIGHT";
-const CARDINAL_MAP = {
-    RIGHT: 0,
-    LEFT: 2,
-    DOWN: 1,
-    UP: 3
-} as const satisfies Record<CARDINAL, number>;
-
-const ANGLE_TO_RAD: Record<number, number> = {
-    0: (0 * Math.PI) / 180.0, // right
-    1: (90 * Math.PI) / 180.0, // down
-    2: (180 * Math.PI) / 180.0, // left
-    3: (270 * Math.PI) / 180.0 // up
-};
-const FULL_ROTATION = (360 * Math.PI) / 180.0;
-let i = 0;
-
 export class Entity {
     id: number;
 
+    actions: ActionType[];
+
     rotation: Vec2D = [0, 1];
-    private rad: number = ANGLE_TO_RAD[3];
+    rad: number = ANGLE_TO_RAD[3];
     angle: number = 3;
 
-    private target: Vec2D | undefined;
+    target: Vec2D | undefined;
+    targetR: number | undefined;
 
-    private coords: Vec2D;
-    private moveSpeed: number = tileW / 100;
+    coords: Vec2D;
+    moveSpeed: number = tileW / 100;
 
-    private indices: Uint16Array;
-    private positions: Float32Array;
+    indices: Uint16Array;
+    positions: Float32Array;
 
-    private binds: EntityBinds | undefined;
-    private program: WebGLProgram | undefined;
-    private vao: WebGLVertexArrayObject | undefined;
-    private vbo: WebGLBuffer | undefined;
-    private posBuf: WebGLBuffer | undefined;
+    binds: EntityBinds | undefined;
+    program: WebGLProgram | undefined;
+    vao: WebGLVertexArrayObject | undefined;
+    vbo: WebGLBuffer | undefined;
+    posBuf: WebGLBuffer | undefined;
 
-    private atlas: WebGLTexture | undefined;
+    atlas: WebGLTexture | undefined;
 
-    constructor(id: number) {
+    constructor(id: number, actions: ActionType[] = ["MOVE", "ROTATE"]) {
         this.id = id;
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
@@ -73,6 +56,9 @@ export class Entity {
             tileW, tileW, SATW*3, SATW*3
         ]);
         this.coords = [Math.round((size / 2) * tileW) - (tileW / 2), Math.round((size / 2) * tileW) - (tileW / 2)];
+        this.rotation[0] = Math.sin(this.rad);
+        this.rotation[1] = Math.cos(this.rad);
+        this.actions = actions;
     }
 
     async init(gl: WebGL2RenderingContext) {
@@ -158,79 +144,8 @@ export class Entity {
     }
 
     update(action?: Action) {
-        let rDelta = 0;
-        let targetR: number | undefined;
-
-        if (action?.type === "MOVE" && !action.isStarted && !this.target) {
-            const value = getMaxMove(action.value!, this.angle, this.coords);
-            if (this.angle === 3) { // UP
-                this.target = [this.coords[0], this.coords[1] + (value * tileW)];
-            }
-            if (this.angle === 0) { // RIGHT
-                this.target = [this.coords[0] + (value * tileW), this.coords[1]];
-            }
-            if (this.angle === 1) { // DOWN
-                this.target = [this.coords[0], this.coords[1] - (value * tileW)];
-            }
-            if (this.angle === 2) { // LEFT
-                this.target = [this.coords[0] - (value * tileW), this.coords[1]];
-            }
-            action?.start();
-        }
-
-        if (action?.type === "ROTATE" && (action.value ?? 0) !== 0) {
-            targetR = this.angle + action.value!;
-            if (targetR < 0) {
-                targetR = 4 + targetR;
-            }
-            if (targetR > 3) {
-                targetR = targetR - 4;
-            }
-            if (action.value! < 0) {
-                let rad = (this.rad < ANGLE_TO_RAD[targetR]) ? this.rad + FULL_ROTATION : this.rad;
-                rDelta = -0.05;
-                if ((rad + rDelta) <= ANGLE_TO_RAD[targetR]) {
-                    action.complete();
-                }
-            } else {
-                let rad = (this.rad > ANGLE_TO_RAD[targetR]) ? this.rad - FULL_ROTATION : this.rad;
-                rDelta = 0.05;
-                if ((rad + rDelta) >= ANGLE_TO_RAD[targetR]) {
-                    action.complete();
-                }
-            }
-            if (action.isComplete) {
-                this.rad = ANGLE_TO_RAD[targetR];
-                this.angle = targetR;
-            } else {
-                this.rad += rDelta;
-            }
-        }
-
-        this.rotation[0] = Math.sin(this.rad);
-        this.rotation[1] = Math.cos(this.rad);
-
-        let delta: Vec2D | undefined;
-        if (this.target) {
-            delta = [
-                clamp(-this.moveSpeed, this.moveSpeed, this.target[0] - this.coords[0]),
-                clamp(-this.moveSpeed, this.moveSpeed, this.target[1] - this.coords[1]),
-            ];
-        }
-
-        if (delta?.[0] === 0 && delta?.[1] === 0) {
-            console.log("complete");
-            action?.complete();
-            this.target = undefined;
-            delta = undefined;
-        }
-
-        if (delta) {
-            this.coords = [this.coords[0] + delta[0], this.coords[1] + delta[1]];
-        }
-
-        if (i++ % 20 === 0) {
-            console.log(JSON.stringify({ c: this.coords, t: getTile(this.coords) }));
+        if (action) {
+            runAction.call(this, action);
         }
     }
 
@@ -288,36 +203,3 @@ const loadTexture = async (gl: WebGL2RenderingContext, img: string): Promise<Web
         };
     });
 }
-
-const getTile = (coords: Vec2D): Vec2D => {
-    return [Math.round(coords[0] / tileW), Math.round(coords[1] / tileW)];
-};
-
-const clamp = (min: number, max: number, val: number) => {
-    return Math.max(min, Math.min(max, val));
-}
-
-const getMaxMove = (moves: number, angle: number, coords: Vec2D) => {
-    let delta: Vec2D = [0, 0];
-    if (angle === CARDINAL_MAP.DOWN) {
-        delta = [0, -tileW];
-    } else if (angle === CARDINAL_MAP.LEFT) {
-        delta = [-tileW, 0];
-    } else if (angle === CARDINAL_MAP.RIGHT) {
-        delta = [tileW, 0];
-    } else {
-        delta = [0, tileW];
-    }
-    let allowed = 0;
-    let current: Vec2D = [...coords];
-    while (allowed < moves) {
-        current[0] += delta[0];
-        current[1] += delta[1];
-        const tileCoord = getTile(current);
-        if (getTileAt(tileCoord)) {
-            break;
-        }
-        allowed++;
-    }
-    return allowed;
-};
