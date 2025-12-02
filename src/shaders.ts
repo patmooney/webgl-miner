@@ -78,6 +78,7 @@ in vec2 a_texcoord;
 uniform vec2 camera;
 uniform vec2 u_movement;
 uniform vec2 u_rotation;
+uniform float tileW;
 
 // Used to pass in the resolution of the canvas
 uniform vec2 u_resolution;
@@ -90,8 +91,9 @@ void main() {
 
   // 10.0 is half of tileW, because we need to offset for rotation to center of tile
   vec2 p = a_position;
-  p.x -= 10.0;
-  p.y -= 10.0;
+  float tW = float(tileW);
+  p.x -= tW;
+  p.y -= tW;
 
   vec2 rotated = vec2(
     p.x * u_rotation.y +
@@ -100,8 +102,8 @@ void main() {
         p.x * u_rotation.x
   );
 
-  rotated += 10.0;
-  rotated += 10.0;
+  rotated += tW;
+  rotated += tW;
 
   rotated += camera + u_movement;
 

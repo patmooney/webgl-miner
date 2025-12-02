@@ -6,17 +6,16 @@ import './style.css'
 import * as webglUtils from "./utils/webgl.js";
 
 import { World } from './world.js';
+import { size, tileW } from './constants.js';
 
-const size = 50;
-const tileW = 20;
 let entities: Entity[] = [];
 
 const input = document.querySelector('#console input');
 const output = document.querySelector('#console div#output');
 
 const loop = async (gl: WebGL2RenderingContext) => {
-    const w = new World(size, tileW);
-    entities.push(new Entity(entities.length, tileW));
+    const w = new World();
+    entities.push(new Entity(entities.length));
 
     state.camera = [(size/8) * tileW, (size/5) * tileW];
 

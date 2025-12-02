@@ -4,6 +4,7 @@ import './style.css'
 import * as webglUtils from "./utils/webgl.js";
 
 import t from "./assets/atlas.png";
+import { size, tileW } from './constants.js';
 
 // BLOCK TYPES
 export type Vec2D = [number, number];
@@ -20,8 +21,6 @@ const ATLAS_IMAGE_NUM = 3; // number of textures in our atlas
 const SATW = 1 / ATLAS_IMAGE_NUM;
 
 export class World {
-    private size: number;
-    private tileWidth: number;
     private indices: Uint16Array;
     private positions: Float32Array;
 
@@ -34,15 +33,13 @@ export class World {
     private blockTex: WebGLTexture | undefined;
     private atlas: WebGLTexture | undefined;
 
-    constructor(size: number, tileWidth: number) {
-        this.size = size;
-        this.tileWidth = tileWidth;
+    constructor() {
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
             0, 0, 0, 1,
-            0, this.tileWidth, 0, 0,
-            this.tileWidth, 0, SATW, 1,
-            this.tileWidth, this.tileWidth, SATW, 0
+            0, tileW, 0, 0,
+            tileW, 0, SATW, 1,
+            tileW, tileW, SATW, 0
         ]);
     }
 
@@ -93,18 +90,18 @@ export class World {
         // Turn on the attribute
 
         // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-        const size = 2;          // 2 components per iteration
+        const vSize = 2;          // 2 components per iteration
         const type = gl.FLOAT;   // the data is 32bit floats
         const normalize = false; // don't normalize the data
         const stride = 4 * Float32Array.BYTES_PER_ELEMENT;
         let offset = 0;        // start at the beginning of the buffer
 
-        gl.vertexAttribPointer(this.binds.position, size, type, normalize, stride, offset);
+        gl.vertexAttribPointer(this.binds.position, vSize, type, normalize, stride, offset);
         gl.enableVertexAttribArray(this.binds.position)
        
         offset += 2 * Float32Array.BYTES_PER_ELEMENT;
 
-        gl.vertexAttribPointer(this.binds.atlas, size, type, normalize, stride, offset);
+        gl.vertexAttribPointer(this.binds.atlas, vSize, type, normalize, stride, offset);
         gl.enableVertexAttribArray(this.binds.atlas)
 
         // Create an empty buffer object to store Index buffer
@@ -127,18 +124,18 @@ export class World {
         }
         gl.bindTexture(gl.TEXTURE_2D, this.blockTex);
 
-        const lDelta = (this.size / 2) - 3;
-        const uDelta = (this.size / 2) + 3;
-        const bTypes = new Int32Array(this.size * this.size).fill(1).map(
+        const lDelta = (size / 2) - 3;
+        const uDelta = (size / 2) + 3;
+        const bTypes = new Int32Array(size * size).fill(1).map(
             (_, idx) => {
-                const col = idx % this.size;
-                const row = Math.floor(idx / this.size);
+                const col = idx % size;
+                const row = Math.floor(idx / size);
                 return (row >= lDelta && row <= uDelta && col >= lDelta && col <= uDelta) ? 0 : 1;
             }
         );
 
         gl.texImage2D(
-            gl.TEXTURE_2D, 0, gl.R32I, this.size, this.size, 0, gl.RED_INTEGER,
+            gl.TEXTURE_2D, 0, gl.R32I, size, size, 0, gl.RED_INTEGER,
             gl.INT, bTypes
         );
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -162,8 +159,8 @@ export class World {
         gl.bindVertexArray(this.vao);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vbo);
 
-        gl.uniform1i(this.binds.tileW, this.tileWidth);
-        gl.uniform1i(this.binds.tileX, this.size);
+        gl.uniform1i(this.binds.tileW, tileW);
+        gl.uniform1i(this.binds.tileX, size);
 
         // block type texture
         gl.activeTexture(gl.TEXTURE0);
@@ -180,7 +177,7 @@ export class World {
         gl.uniform2f(this.binds.resolution, gl.canvas.width, gl.canvas.height);
 
         // draw
-        gl.drawElementsInstanced(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT,0, this.size * this.size);
+        gl.drawElementsInstanced(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT,0, size * size);
     }
 }
 
