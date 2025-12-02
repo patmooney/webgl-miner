@@ -7,6 +7,7 @@ import * as webglUtils from "./utils/webgl.js";
 
 import { World } from './world.js';
 import { size, tileW } from './constants.js';
+import { initMap } from './map.js';
 
 let entities: Entity[] = [];
 
@@ -20,6 +21,8 @@ const loop = async (gl: WebGL2RenderingContext) => {
     state.camera = [(size/8) * tileW, (size/5) * tileW];
 
     initMouse();
+    initMap();
+
     for (let e of entities) {
         await e.init(gl);
     }
@@ -39,8 +42,8 @@ const loop = async (gl: WebGL2RenderingContext) => {
     const parseCmd = (val: string) => {
         const [cmd, value] = val.split(" ");
         switch (cmd) {
-            case "move": state.actions.addAction("MOVE", { entityId: 0, timeEnd: Date.now() + 10000, value: parseInt(value ?? 0) }); break;
-            case "rotate": state.actions.addAction("ROTATE", { entityId: 0, timeEnd: Date.now() + 10000, value: parseInt(value ?? 0) }); break;
+            case "move": state.actions.addAction("MOVE", { entityId: 0, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) }); break;
+            case "rotate": state.actions.addAction("ROTATE", { entityId: 0, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) }); break;
         };
         printAction(state.actions.stack.at(-1));
     };

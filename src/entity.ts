@@ -5,7 +5,8 @@ import * as webglUtils from "./utils/webgl.js";
 
 import t from "./assets/atlas.png";
 import type { Action } from './actions.js';
-import { tileW } from './constants';
+import { tileW, size } from './constants';
+import { getTileAt } from './map.js';
 
 // BLOCK TYPES
 type Vec2D = [number, number];
@@ -22,6 +23,14 @@ type EntityBinds = {
 const ATLAS_IMAGE_NUM = 3; // number of textures in our atlas
 const SATW = 1 / ATLAS_IMAGE_NUM;
 
+type CARDINAL = "UP" | "DOWN" | "LEFT" | "RIGHT";
+const CARDINAL_MAP = {
+    RIGHT: 0,
+    LEFT: 2,
+    DOWN: 1,
+    UP: 3
+} as const satisfies Record<CARDINAL, number>;
+
 const ANGLE_TO_RAD: Record<number, number> = {
     0: (0 * Math.PI) / 180.0, // right
     1: (90 * Math.PI) / 180.0, // down
@@ -29,6 +38,7 @@ const ANGLE_TO_RAD: Record<number, number> = {
     3: (270 * Math.PI) / 180.0 // up
 };
 const FULL_ROTATION = (360 * Math.PI) / 180.0;
+let i = 0;
 
 export class Entity {
     id: number;
@@ -40,7 +50,7 @@ export class Entity {
     private target: Vec2D | undefined;
 
     private coords: Vec2D;
-    private tile: Vec2D;
+    private moveSpeed: number = tileW / 100;
 
     private indices: Uint16Array;
     private positions: Float32Array;
@@ -62,8 +72,7 @@ export class Entity {
             tileW, 0, SATW*2, SATW*3,
             tileW, tileW, SATW*3, SATW*3
         ]);
-        this.coords = [500, 500];
-        this.tile = [50, 50];
+        this.coords = [Math.round((size / 2) * tileW) - (tileW / 2), Math.round((size / 2) * tileW) - (tileW / 2)];
     }
 
     async init(gl: WebGL2RenderingContext) {
@@ -150,26 +159,23 @@ export class Entity {
 
     update(action?: Action) {
         let rDelta = 0;
-        let delta = [0, 0];
         let targetR: number | undefined;
 
-        if (action?.type === "MOVE") {
-            if (this.angle === 3) {
-                console.log(`Moving ${action.value} up`);
-                delta = [0, 0.05];
+        if (action?.type === "MOVE" && !action.isStarted && !this.target) {
+            const value = getMaxMove(action.value!, this.angle, this.coords);
+            if (this.angle === 3) { // UP
+                this.target = [this.coords[0], this.coords[1] + (value * tileW)];
             }
-            if (this.angle === 0) {
-                console.log(`Moving ${action.value} right`);
-                delta = [0.05, 0];
+            if (this.angle === 0) { // RIGHT
+                this.target = [this.coords[0] + (value * tileW), this.coords[1]];
             }
-            if (this.angle === 1) {
-                console.log(`Moving ${action.value} down`);
-                delta = [0, -0.05];
+            if (this.angle === 1) { // DOWN
+                this.target = [this.coords[0], this.coords[1] - (value * tileW)];
             }
-            if (this.angle === 2) {
-                console.log(`Moving ${action.value} left`);
-                delta = [-0.05, 0];
+            if (this.angle === 2) { // LEFT
+                this.target = [this.coords[0] - (value * tileW), this.coords[1]];
             }
+            action?.start();
         }
 
         if (action?.type === "ROTATE" && (action.value ?? 0) !== 0) {
@@ -204,8 +210,27 @@ export class Entity {
         this.rotation[0] = Math.sin(this.rad);
         this.rotation[1] = Math.cos(this.rad);
 
+        let delta: Vec2D | undefined;
+        if (this.target) {
+            delta = [
+                clamp(-this.moveSpeed, this.moveSpeed, this.target[0] - this.coords[0]),
+                clamp(-this.moveSpeed, this.moveSpeed, this.target[1] - this.coords[1]),
+            ];
+        }
+
+        if (delta?.[0] === 0 && delta?.[1] === 0) {
+            console.log("complete");
+            action?.complete();
+            this.target = undefined;
+            delta = undefined;
+        }
+
         if (delta) {
             this.coords = [this.coords[0] + delta[0], this.coords[1] + delta[1]];
+        }
+
+        if (i++ % 20 === 0) {
+            console.log(JSON.stringify({ c: this.coords, t: getTile(this.coords) }));
         }
     }
 
@@ -263,3 +288,36 @@ const loadTexture = async (gl: WebGL2RenderingContext, img: string): Promise<Web
         };
     });
 }
+
+const getTile = (coords: Vec2D): Vec2D => {
+    return [Math.round(coords[0] / tileW), Math.round(coords[1] / tileW)];
+};
+
+const clamp = (min: number, max: number, val: number) => {
+    return Math.max(min, Math.min(max, val));
+}
+
+const getMaxMove = (moves: number, angle: number, coords: Vec2D) => {
+    let delta: Vec2D = [0, 0];
+    if (angle === CARDINAL_MAP.DOWN) {
+        delta = [0, -tileW];
+    } else if (angle === CARDINAL_MAP.LEFT) {
+        delta = [-tileW, 0];
+    } else if (angle === CARDINAL_MAP.RIGHT) {
+        delta = [tileW, 0];
+    } else {
+        delta = [0, tileW];
+    }
+    let allowed = 0;
+    let current: Vec2D = [...coords];
+    while (allowed < moves) {
+        current[0] += delta[0];
+        current[1] += delta[1];
+        const tileCoord = getTile(current);
+        if (getTileAt(tileCoord)) {
+            break;
+        }
+        allowed++;
+    }
+    return allowed;
+};

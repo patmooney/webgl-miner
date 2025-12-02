@@ -5,6 +5,7 @@ import * as webglUtils from "./utils/webgl.js";
 
 import t from "./assets/atlas.png";
 import { size, tileW } from './constants.js';
+import { getMap } from './map.js';
 
 // BLOCK TYPES
 export type Vec2D = [number, number];
@@ -124,15 +125,7 @@ export class World {
         }
         gl.bindTexture(gl.TEXTURE_2D, this.blockTex);
 
-        const lDelta = (size / 2) - 3;
-        const uDelta = (size / 2) + 3;
-        const bTypes = new Int32Array(size * size).fill(1).map(
-            (_, idx) => {
-                const col = idx % size;
-                const row = Math.floor(idx / size);
-                return (row >= lDelta && row <= uDelta && col >= lDelta && col <= uDelta) ? 0 : 1;
-            }
-        );
+        const bTypes = getMap();
 
         gl.texImage2D(
             gl.TEXTURE_2D, 0, gl.R32I, size, size, 0, gl.RED_INTEGER,

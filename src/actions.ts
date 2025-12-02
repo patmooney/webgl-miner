@@ -1,21 +1,30 @@
 import type { Vec2D } from "./world";
 
 export type ActionType = "ROTATE" | "MOVE";
-export class Action {
+
+export interface IAction {
+    delta?: Vec2D;
+    value?: number;
+    timeEnd: number;
+    entityId: number;
+}
+
+export class Action implements IAction {
     type: ActionType;
     delta?: Vec2D;
     value?: number;
     timeEnd: number;
     entityId: number;
-    isComplete?: boolean = false;
 
-    constructor(type: ActionType, { delta, value, timeEnd, entityId, isComplete }: Omit<Action, "type" | "complete">) {
+    isComplete?: boolean = false;
+    isStarted?: boolean = false;
+
+    constructor(type: ActionType, { delta, value, timeEnd, entityId }: IAction) {
         this.type = type;
         this.delta = delta;
         this.value = value;
         this.timeEnd = timeEnd;
         this.entityId = entityId;
-        this.isComplete = isComplete ?? false;
 
         if (this.type === "ROTATE") {
             this.value = Math.max(Math.min(3, this.value ?? 0), -3);
@@ -24,6 +33,9 @@ export class Action {
 
     complete() {
         this.isComplete = true;
+    }
+    start() {
+        this.isStarted = true;
     }
 }
 
@@ -41,8 +53,8 @@ export class Actions {
         );
         return toReturn;
     }
-    addAction(type: ActionType, { delta, value, timeEnd, entityId }: Omit<Action, "type" | "complete">) {
-        const a = new Action(type, { delta, value, timeEnd, entityId, isComplete: false });
+    addAction(type: ActionType, { delta, value, timeEnd, entityId }: IAction) {
+        const a = new Action(type, { delta, value, timeEnd, entityId });
         this.stack.push(a);
     }
 }
