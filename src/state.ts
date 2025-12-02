@@ -10,6 +10,7 @@ class State {
     camera: Vec2D = [0, 0];
     actions: Actions;
     zoom: number = 0;
+    selectedEntity: number | undefined;
 
     constructor() {
         this.actions = new Actions();

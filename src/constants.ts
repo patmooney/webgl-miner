@@ -1,5 +1,5 @@
 export const tileW = 40;
-export const size = 20;
+export const size = 1000;
 
 export const ATLAS_IMAGE_NUM = 3; // number of textures in our atlas
 export const SATW = 1 / ATLAS_IMAGE_NUM;

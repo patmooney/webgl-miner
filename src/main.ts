@@ -1,4 +1,4 @@
-import type { Action } from './actions.js';
+import type { Action, ActionType } from './actions.js';
 import { Entity } from './entity.js';
 import { initMouse } from './input.js';
 import { state } from './state.js';
@@ -19,7 +19,7 @@ const loop = async (gl: WebGL2RenderingContext) => {
 
     entities.push(new Entity(entities.length, "MINER", ["ROTATE", "MOVE"]));
 
-    state.camera = [(size/8) * tileW, (size/5) * tileW];
+    state.camera = [((size/2) - 9) * tileW, ((size/2) - 6) * tileW];
 
     initMouse();
     initMap();
@@ -34,19 +34,38 @@ const loop = async (gl: WebGL2RenderingContext) => {
     input?.addEventListener("keyup", (e) => {
         const key = (e as KeyboardEvent).key;
         const val = (e.target as HTMLInputElement).value;
-        if (key === "Enter") {
+        if (key === "Enter" && val.length) {
             parseCmd(val);
             (e.target as HTMLInputElement).value = "";
         }
     });
 
+    command_Welcome();
+    (input as HTMLInputElement)?.focus();
+
     const parseCmd = (val: string) => {
-        const [cmd, value] = val.split(" ");
-        switch (cmd) {
-            case "move": state.actions.addAction("MOVE", { entityId: 0, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) }); break;
-            case "rotate": state.actions.addAction("ROTATE", { entityId: 0, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) }); break;
-        };
-        printAction(state.actions.stack.at(-1));
+        print(" ");
+        print(` > ${val}`);
+        const [rawCmd, value] = val.split(" ");
+        const cmd = rawCmd.toLowerCase();
+
+        const isMeta = metaCommand(cmd, value);
+        if (isMeta === false) {
+            print("[ERROR] Invalid argument");
+            return;
+        } else if (isMeta) {
+            return;
+        }
+        const isCommand = entityCommand(cmd, value);
+        if (isCommand === false) {
+            print("[ERROR] No entity selected!");
+            return;
+        } else if (isCommand) {
+            printAction(state.actions.stack.at(-1));
+            return;
+        }
+
+        print(`[ERROR] Unknown command: ${cmd}`);
     };
 
     while(true) {
@@ -82,10 +101,112 @@ const printAction = (a: Action | undefined) => {
     if (!a) {
         return;
     }
-    const line = document.createElement("p");
-    line.textContent = `[${(Date.now() / 1000).toFixed(0)}] Entity [0] - ${a.type}: ${a.value}`;
-    output?.appendChild(line);
+    print(`[${(Date.now() / 1000).toFixed(0)}] Entity [0] - ${a.type}: ${a.value}`);
 };
+
+const print = (str: string) => {
+    str.split("\n").map(
+        (line) => {
+            const p = document.createElement("p");
+            p.textContent = line;
+            output?.appendChild(p);
+        }
+    );
+    output?.scrollTo(0, output.scrollHeight ?? 0);
+};
+
+const command_Welcome = () => {
+    print(`
+Welcome
+========
+
+Type "help" to get started
+`);
+};
+
+const command_List = () => {
+    print(`
+ENTITIES
+==========
+
+${entities.map((e) => `[${e.id}] - ${e.type}`).join("\n")}
+`);
+};
+
+const command_Help = () => {
+    print(`
+HELP
+=====
+
+list       - List available entities
+select <n> - Select entity for control
+commands   - List available commands for selected entity
+selected   - Show currently selected entitiy
+`);
+};
+
+const command_Selected = () => {
+    const selected = state.selectedEntity !== undefined ? entities.find((e) => e.id === state.selectedEntity) : undefined;
+    print(`
+SELECTED
+=========
+
+${selected ? `[${selected.id}] - ${selected.type}` : "- NONE -"}
+`);
+};
+
+const command_Commands = () => {
+    const selected = state.selectedEntity !== undefined ? entities.find((e) => e.id === state.selectedEntity) : undefined;
+    if (!selected) {
+        return print(`[ERROR] No entity selected`);
+    }
+print(`
+COMMANDS
+=========
+
+${selected.actions.map((act) => ` - ${act.toLowerCase()}`).join("\n")}
+`);
+
+};
+
+const entityCommand = (cmd: string, value: string): boolean | undefined => {
+    const addAction = (action: ActionType) => {
+        if (state.selectedEntity === undefined) {
+            return false;
+        }
+        state.actions.addAction(action, { entityId: state.selectedEntity, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) });
+        return true;
+    };
+
+    switch (cmd) {
+        case "move": return addAction("MOVE");
+        case "rotate": return addAction("ROTATE");
+        default: return undefined;
+    };
+};
+
+const metaCommand = (cmd: string, value: string): boolean | undefined => {
+    switch (cmd) {
+        case "help": command_Help(); return true;
+        case "list": command_List(); return true;
+        case "selected": command_Selected(); return true;
+        case "commands": command_Commands(); return true;
+        case "select": return selectEntity(parseInt(value));
+        default: return undefined;
+    };
+};
+
+const selectEntity = (entityId: number) => {
+    if (isNaN(entityId)) {
+        return false;
+    }
+    if (!entities.find((e) => e.id === entityId)) {
+        return false;
+    }
+    state.selectedEntity = entityId;
+    print(`Entity ${entityId} selected`);
+    return true;
+}
 
 const run = () => {
     const canvas = document.querySelector("#c") as HTMLCanvasElement;

@@ -2,11 +2,12 @@ import { MIN_ZOOM, state } from "./state";
 import type { Vec2D } from "./world";
 
 let dragStart: Vec2D | undefined;
+let canvas = document.getElementById("c");
 export const initMouse = () => {
-    window.document.body.addEventListener("mousedown", (e: Event) => {
+    canvas?.addEventListener("mousedown", (e: Event) => {
         dragStart = [(e as MouseEvent).clientX, (e as MouseEvent).clientY];
     });
-    window.document.body.addEventListener("mousemove", (e: Event) => {
+    canvas?.addEventListener("mousemove", (e: Event) => {
         if (dragStart) {
             let coords = [(e as MouseEvent).clientX, (e as MouseEvent).clientY];
             const zoom = state.zoom + (0 - MIN_ZOOM)
@@ -18,7 +19,8 @@ export const initMouse = () => {
             dragStart = coords as Vec2D;
         }
     });
-    window.document.body.addEventListener("mouseup", () => dragStart = undefined);
+    canvas?.addEventListener("mouseup", () => dragStart = undefined);
+    canvas?.addEventListener("mouseout", () => dragStart = undefined);
 
     document.addEventListener("wheel", (e) => {
         const deltaY = (e as WheelEvent).deltaY;
