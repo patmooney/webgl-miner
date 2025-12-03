@@ -1,5 +1,7 @@
 import { Actions } from "./actions";
 import { tileW } from "./constants";
+import type { Entity } from "./entity";
+import { Inventory } from "./invent";
 import { clamp } from "./utils/maths";
 import type { Vec2D } from "./world";
 
@@ -11,9 +13,12 @@ class State {
     actions: Actions;
     zoom: number = 0;
     selectedEntity: number | undefined;
+    inventory: Inventory;
+    entities: Entity[] = [];
 
     constructor() {
         this.actions = new Actions();
+        this.inventory = new Inventory();
     }
     resolution(gl: WebGL2RenderingContext): [number, number] {
         const ratio = gl.canvas.height / gl.canvas.width;

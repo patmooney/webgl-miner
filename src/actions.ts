@@ -2,7 +2,7 @@ import { size } from "./constants";
 import { updateMap, type Tile } from "./map";
 import type { Vec2D } from "./world";
 
-export type ActionType = "ROTATE" | "MOVE" | "MINE";
+export type ActionType = "ROTATE" | "MOVE" | "MINE" | "UNLOAD";
 
 export interface IAction {
     delta?: Vec2D;

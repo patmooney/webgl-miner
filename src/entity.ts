@@ -8,6 +8,7 @@ import type { Action, ActionType } from './actions.js';
 import { tileW, size, ANGLE_TO_RAD, SATW, type Angle } from './constants';
 import { runAction } from './commands/index.js';
 import { state } from './state.js';
+import { Inventory } from './invent.js';
 
 // BLOCK TYPES
 type Vec2D = [number, number];
@@ -32,6 +33,7 @@ export class Entity {
     rotation: Vec2D = [0, 1];
     rad: number = ANGLE_TO_RAD[3];
     angle: Angle = 3;
+    inventory: Inventory;
 
     target: Vec2D | undefined;
     targetR: Angle | undefined;
@@ -64,6 +66,7 @@ export class Entity {
         this.rotation[1] = Math.cos(this.rad);
         this.actions = actions;
         this.type = type;
+        this.inventory = new Inventory();
     }
 
     async init(gl: WebGL2RenderingContext) {

@@ -1,7 +1,7 @@
 import type { Entity } from "../entity";
 import type { Vec2D, Angle } from "../constants";
 import type { Action } from "../actions";
-import { coordToTile, getNeighbours, getTileAt, TILE_DURABILITY, TILE_TYPE, type Tile } from "../map";
+import { coordToTile, getNeighbours, getTileAt, TILE_DROP, TILE_DURABILITY, TILE_TYPE, type Tile } from "../map";
 import { state } from "../state";
 
 const DAMAGE = 1;
@@ -13,6 +13,13 @@ export const command_Mine = function(this: Entity, action: Action) {
 
         let durability = tile.durability * TILE_DURABILITY[tile.tile];
         durability -= DAMAGE;
+
+        const drops = TILE_DROP[tile.tile as keyof typeof TILE_DROP] ?? [];
+        for (let drop of drops) {
+            if (Math.random() <= drop.chance) {
+                this.inventory.add(drop.item)
+            }
+        }
 
         if (durability <= 0) { // tile is done
             const neighbours = getNeighbours(tile.coord);

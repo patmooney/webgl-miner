@@ -3,6 +3,7 @@ import type { Entity } from "../entity";
 import { command_Mine } from "./mine";
 import { command_Move } from "./move";
 import { command_Rotate } from "./rotate";
+import { command_Unload } from "./unload";
 
 export const runAction = function(this: Entity, action: Action) {
     if (!this.actions.includes(action.type)) {
@@ -16,5 +17,7 @@ export const runAction = function(this: Entity, action: Action) {
             return command_Rotate.call(this, action);
         case "MINE":
             return command_Mine.call(this, action);
+        case "UNLOAD":
+            return command_Unload.call(this, action);
     }
 }

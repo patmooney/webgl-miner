@@ -1,4 +1,5 @@
 import { size, tileW, TILE_STORE_SIZE } from "./constants";
+import type { Item } from "./invent";
 import type { Vec2D } from "./world";
 
 export type TILE = "SHADOW" | "ROCK" | "FLOOR" | "ORE" | "HOME";
@@ -26,6 +27,10 @@ export const TILE_TYPE = {
     SHADOW: 3,
     HOME: 4
 } as const satisfies Record<TILE, number>;
+
+export const TILE_DROP = {
+    ROCK: [{ item: "stone", chance: 1 }]
+} as const satisfies { [key in TILE]?: { item: Item, chance: number }[] };
 
 export const getTileType = (tile: number): TILE => {
     return (Object.entries(TILE_TYPE).find(
@@ -70,8 +75,6 @@ export const initMap = (): Float32Array => {
         }
         map.push(TILE_TYPE.SHADOW, 1);
     }
-
-    console.log(new Float32Array(map));
 
     return new Float32Array(map);
 }
