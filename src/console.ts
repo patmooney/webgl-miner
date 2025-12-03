@@ -2,9 +2,9 @@ import type { Action, ActionType } from "./actions";
 import type { Entity } from "./entity";
 import { ItemLabels, type Item } from "./invent";
 import { state } from "./state";
-import { Recipes } from "./story";
+import { onCraft, Recipes, type RecipeInterface, type RecipeName } from "./story";
 
-const output = document.querySelector('#console div#output');
+const output = document.querySelector('#control_console div#output');
 
 export const parseCmd = (val: string) => {
     print(" ");
@@ -14,21 +14,25 @@ export const parseCmd = (val: string) => {
 
     const isMeta = metaCommand(cmd, value);
     if (isMeta === false) {
-        print("[ERROR] Invalid argument");
+        printError("Invalid argument");
         return;
     } else if (isMeta) {
         return;
     }
     const isCommand = entityCommand(cmd, value);
     if (isCommand === false) {
-        print("[ERROR] No entity selected!");
+        printError("No entity selected!");
         return;
     } else if (isCommand) {
         return;
     }
 
-    print(`[ERROR] Unknown command: ${cmd}`);
+    printError(`Unknown command: ${cmd}`);
 };
+
+const printError = (str: string) => {
+    print(`[ERROR] ${str}`, "error");
+}
 
 const entityCommand = (cmd: string, value: string): boolean | undefined => {
     const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
@@ -153,7 +157,7 @@ ${selected ? `[${selected.id}] - ${selected.type}` : "- NONE -"}
 export const command_Commands = () => {
     const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
     if (!selected) {
-        return print(`[ERROR] No entity selected`);
+        return printError(`No entity selected`);
     }
 print(`
 COMMANDS
@@ -175,7 +179,7 @@ ${Object.entries(state.inventory.inventory).map(([k, v]) => `${ItemLabels[k as I
 export const command_Inventory = () => {
     const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
     if (!selected) {
-        return print(`[ERROR] No entity selected`);
+        return printError(`No entity selected`);
     }
     print(`
 INVENTORY
@@ -191,13 +195,21 @@ export const command_Crafting = (recipe?: string) => {
     if (!state.story.STORAGE_FIRST) {
         return undefined;
     }
-    if (!recipe) {
-        const recipes = Object.entries(Recipes).filter(
-            ([, v]) => (v.story ?? []).every((s) => state.story[s])
-        ).map(
-            ([k, v]) => `${k}\n${v.description}\n${v.ingredients.map((r) => ` - ${r.item} x ${r.count}`).join("\n")}`
-        );
-        print(`
+    if (recipe?.trim()) {
+        if (!Recipes[recipe as RecipeName]) {
+            printError(`Unknown recipe: ${recipe}`);
+            return true;
+        }
+        return onCraft(recipe as RecipeName);
+    }
+    const recipes = Object.entries(Recipes).filter(
+        ([, v]) => (v.story ?? []).every((s) => state.story[s])
+    ).filter(
+        ([, v]) => !(v as RecipeInterface).waypoint || !state.story[(v as RecipeInterface).waypoint]
+    ).map(
+        ([k, v]) => `${k}\n${v.description}\n${v.ingredients.map((r) => ` - ${r.item} x ${r.count}`).join("\n")}`
+    );
+    print(`
 CRAFTING
 =========
 
@@ -205,6 +217,6 @@ Usage: "crafting <recipe>"
 
 ${recipes?.length ? "- Recipes -\n\n" + recipes.join("\n\n") : " - No recipes available -"}
 `);
-    }
+
     return true;
 };

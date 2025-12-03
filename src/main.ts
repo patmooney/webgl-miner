@@ -9,13 +9,14 @@ import * as csl from "./console";
 import { World } from './world';
 import { size, tileW } from './constants';
 import { initMap } from './map';
-import { Inventory } from './invent';
-import { onStorage } from './story';
+import { Inventory, type Item } from './invent';
+import { onStorage, onStory, type WayPoint } from './story';
 
 const loop = async (gl: WebGL2RenderingContext) => {
     initMap();
     const w = new World();
     state.inventory = new Inventory(onStorage);
+    state.onStory = onStory;
 
     state.entities.push(new Entity(state.entities.length, "MINER", ["ROTATE", "MOVE", "MINE", "UNLOAD"]));
 
@@ -28,10 +29,16 @@ const loop = async (gl: WebGL2RenderingContext) => {
     }
     await w.init(gl);
 
-    /*
-    state.story.STORAGE_FIRST = true;
-    state.story.IRON_FIRST = true;
-    */
+    const initialStory: WayPoint[] = [];
+    const initialStorage: [Item, number][] = [
+/*        ["stone", 200],
+        ["iron", 200],
+        ["carbon", 200],
+        ["copper", 200],*/
+    ];
+
+    initialStorage.forEach(([i, c]) => state.inventory.add(i, c));
+    initialStory.forEach((w) => state.addWaypoint(w));
 
     let time = 0;
     csl.command_Welcome();

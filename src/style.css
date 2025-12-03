@@ -17,6 +17,13 @@ div.control {
 
 div#context {
     flex-grow: 1;
+    background-color: black;
+    height: 300px;
+    color: white;
+}
+
+div#context > div.hidden {
+    display: none !important;
 }
 
 div#nav {
@@ -55,7 +62,7 @@ div#nav > div.active {
     color: white;
 }
 
-div#console {
+div#control_console {
     background-color: black;
     box-sizing: border-box;
     height: 300px;
@@ -64,7 +71,7 @@ div#console {
     font-family: "Rubik Dirt", system-ui;
 }
 
-div#console > div#output {
+div#control_console > div#output {
     flex: 1;
     overflow-y: auto;
     white-space: pre;
@@ -95,6 +102,11 @@ div#output > p.important {
 div#output > p.log {
     background-color: white;
     color: black;
+}
+
+div#output > p.error {
+    background-color: #c33;
+    color: white;
 }
 
 div.bang {

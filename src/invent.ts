@@ -1,11 +1,12 @@
 
-export type Item = "stone" | "iron" | "carbon" | "copper";
+export type Item = "stone" | "iron" | "carbon" | "copper" | "module_visual_scanner";
 
 export const ItemLabels: Record<Item, string> = {
     stone: "Stone",
     iron: "Iron ore",
     carbon: "Carbon",
-    copper: "Copper"
+    copper: "Copper",
+    module_visual_scanner: "Visual Scanner (Module)"
 } as const satisfies Record<Item, string>;
 
 export class Inventory {

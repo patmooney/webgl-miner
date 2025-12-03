@@ -18,10 +18,12 @@ class State {
     entities: Entity[] = [];
     story: { [key in WayPoint]?: boolean } = {};
     history: string[] = [];
+    onStory?: (waypoint: WayPoint) => void;
 
-    constructor(actions = new Actions(), inventory = new Inventory()) {
+    constructor(actions = new Actions(), inventory = new Inventory(), onStory?: (waypoint: WayPoint) => void) {
         this.actions = actions;
         this.inventory = inventory;
+        this.onStory = onStory;
     }
     resolution(gl: WebGL2RenderingContext): [number, number] {
         const ratio = gl.canvas.height / gl.canvas.width;
@@ -45,6 +47,12 @@ class State {
     getHistory() {
         this.history = this.history.slice(-HISTORY_MAX).toReversed().filter((v, idx, arr) => arr.indexOf(v) === idx).reverse();
         return this.history;
+    }
+    addWaypoint(waypoint: WayPoint) {
+        if (!this.story[waypoint]) {
+            this.story[waypoint] = true;
+            this.onStory?.(waypoint);
+        }
     }
 }
 
