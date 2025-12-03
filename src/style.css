@@ -1,3 +1,6 @@
+body {
+    font-family: courier;
+}
 canvas#c {
     width: 800px;
 }
@@ -7,10 +10,54 @@ div.container {
     width: 800px;
 }
 
+div.control {
+    display: flex;
+    flex-direction: row;
+}
+
+div#context {
+    flex-grow: 1;
+}
+
+div#nav {
+    display: flex;
+    flex-direction: column;
+    background: black;
+    padding: 0.5rem;
+    border-left: solid 1px #333;
+}
+
+div#nav > div {
+    text-align: center;
+    background: black;
+    color: white;
+    border: solid 1px #333;
+    padding: .5rem;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+div#nav > span {
+    text-align: center;
+    padding-left: .5rem;
+    padding-right: .5rem;
+    color: #999;
+    margin-bottom: .5rem;
+    font-size: .8rem;
+}
+
+div#nav > div:hover {
+    background-color: #333;
+}
+
+div#nav > div.active {
+    background-color: #2b882b;
+    color: white;
+}
+
 div#console {
     background-color: black;
     box-sizing: border-box;
-    width: 800px;
     height: 300px;
     display: flex;
     flex-direction: column;
@@ -43,6 +90,11 @@ div#output > p.important {
     background-color: #2b882b;
     padding: .5rem;
     color: white;
+}
+
+div#output > p.log {
+    background-color: white;
+    color: black;
 }
 
 div.bang {

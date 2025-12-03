@@ -5,8 +5,16 @@ import { coordToTile, getNeighbours, getTileAt, TILE_DROP, TILE_DURABILITY, TILE
 import { state } from "../state";
 
 const DAMAGE = 1;
+const MINE_TIME_MS = 2000;
 
 export const command_Mine = function(this: Entity, action: Action) {
+    if (!action.isStarted) {
+        action.timeEnd = Date.now() + MINE_TIME_MS
+        action.start();
+    }
+    if (action.timeEnd > Date.now()) {
+        return;
+    }
     action.complete();
     const tile = getFacingTile(coordToTile(this.coords), this.angle, 1);
     if (tile.type === TILE_TYPE.ROCK || tile.type === TILE_TYPE.ORE) {

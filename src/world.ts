@@ -17,6 +17,7 @@ type WorldBinds = {
     tileX: WebGLUniformLocation,
     camera: WebGLUniformLocation,
     resolution: WebGLUniformLocation,
+    atlasW: WebGLUniformLocation,
 };
 
 export class World {
@@ -57,7 +58,8 @@ export class World {
             tileW: gl.getUniformLocation(program, "tileW"),
             tileX: gl.getUniformLocation(program, "tileX"),
             camera: gl.getUniformLocation(program, "camera"),
-            resolution: gl.getUniformLocation(program, "u_resolution")
+            resolution: gl.getUniformLocation(program, "u_resolution"),
+            atlasW: gl.getUniformLocation(program, "u_atlas_w")
         };
 
         if (binds.camera === null || binds.position === null || binds.resolution === null || binds.tileW === null || binds.tileX === null || binds.atlas === null) {
@@ -175,6 +177,7 @@ export class World {
         gl.bindTexture(gl.TEXTURE_2D, this.atlas);
         gl.uniform1i(gl.getUniformLocation(this.program, "u_data"), 0);
         gl.uniform1i(gl.getUniformLocation(this.program, "u_texture"), 1);
+        gl.uniform1f(this.binds.atlasW, SATW);
 
         gl.uniform2fv(this.binds.camera, [-camera[0], -camera[1]]);
 

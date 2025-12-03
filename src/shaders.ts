@@ -8,6 +8,7 @@ in vec2 a_texcoord;
 
 uniform int tileX;
 uniform int tileW;
+uniform float u_atlas_w;
 uniform vec2 camera;
 
 // Used to pass in the resolution of the canvas
@@ -18,6 +19,7 @@ uniform highp sampler2D u_data;
 out vec2 v_texcoord;
 out float b_type;
 out float durability;
+out float atlas_w;
 
 // all shaders have a main function
 void main() {
@@ -48,6 +50,7 @@ void main() {
   b_type = tile.r;
   durability = tile.g;
   v_texcoord = a_texcoord;
+  atlas_w = u_atlas_w;
 }
 `;
 
@@ -60,6 +63,7 @@ in vec2 v_texcoord;
 
 in float b_type;
 in float durability;
+in float atlas_w;
 
 // The texture.
 uniform sampler2D u_texture;
@@ -68,7 +72,7 @@ uniform sampler2D u_texture;
 out vec4 outColor;
 
 void main() {
-  vec2 tcoord = vec2(v_texcoord.x + (0.2 * b_type), v_texcoord.y);
+  vec2 tcoord = vec2(v_texcoord.x + (atlas_w * b_type), v_texcoord.y);
   outColor = texture(u_texture, tcoord) * vec4(1.0, durability, durability, 1.0);
 }`;
 

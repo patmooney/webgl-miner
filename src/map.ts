@@ -23,14 +23,23 @@ export const TILE_NAVIGATE = {
 export const TILE_TYPE = {
     FLOOR: 0,
     ROCK: 1,
-    ORE: 2,
+    // 2 is reserved for miner texture
     SHADOW: 3,
-    HOME: 4
+    HOME: 4,
+    ORE: 5,
 } as const satisfies Record<TILE, number>;
 
-export const TILE_DROP = {
-    ROCK: [{ item: "stone", chance: 1 }, { item: "iron", chance: 0.05 }]
-} as const satisfies { [key in TILE]?: { item: Item, chance: number }[] };
+export type Drop = {
+    item: Item,
+    chance: number
+};
+
+export const TILE_DROP: { [key in TILE]?: Drop[] } = {
+    // OK so drop chance should be multiplied depending on depth
+    // ORE rocks should ofc have slightly higher chances + rare ore chance
+    ROCK: [{ item: "stone", chance: 1 }, { item: "iron", chance: 0.02 }],
+    ORE: [{ item: "stone", chance: 0.01 }, { item: "iron", chance: 0.05 }, { item: "copper", chance: 0.02 }, { item: "carbon", chance: 0.01 }]
+} as const satisfies { [key in TILE]?: Drop[] };
 
 export const getTileType = (tile: number): TILE => {
     return (Object.entries(TILE_TYPE).find(

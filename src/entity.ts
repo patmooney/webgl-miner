@@ -52,7 +52,7 @@ export class Entity {
 
     atlas: WebGLTexture | undefined;
 
-    constructor(id: number, type: EntityType, actions: ActionType[] = ["MOVE", "ROTATE"]) {
+    constructor(id: number, type: EntityType, actions: ActionType[] = ["MOVE", "ROTATE"], inventorySize: number = 10) {
         this.id = id;
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
@@ -66,7 +66,7 @@ export class Entity {
         this.rotation[1] = Math.cos(this.rad);
         this.actions = actions;
         this.type = type;
-        this.inventory = new Inventory();
+        this.inventory = new Inventory(undefined, inventorySize);
     }
 
     async init(gl: WebGL2RenderingContext) {

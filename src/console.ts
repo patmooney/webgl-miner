@@ -1,4 +1,5 @@
 import type { Action, ActionType } from "./actions";
+import type { Entity } from "./entity";
 import { ItemLabels, type Item } from "./invent";
 import { state } from "./state";
 import { Recipes } from "./story";
@@ -23,7 +24,6 @@ export const parseCmd = (val: string) => {
         print("[ERROR] No entity selected!");
         return;
     } else if (isCommand) {
-        printAction(state.actions.stack.at(-1));
         return;
     }
 
@@ -74,11 +74,11 @@ const selectEntity = (entityId: number) => {
     return true;
 }
 
-export const printAction = (a: Action | undefined) => {
+export const printAction = (e: Entity, a: Action | undefined) => {
     if (!a) {
         return;
     }
-    print(`[${(Date.now() / 1000).toFixed(0)}] Entity [0] - ${a.type}: ${a.value}`);
+    print(`[${(Date.now() / 1000).toFixed(0)}] Entity [${e.id}] - ${a.type}: ${a.value}`, "log");
 };
 
 export const printEntity = (id: number, msg: string) => {
@@ -180,6 +180,7 @@ export const command_Inventory = () => {
     print(`
 INVENTORY
 ==========
+Slots: ${selected.inventory.total} / ${selected.inventory.limit ?? "-"}
 
 ${Object.entries(selected.inventory.inventory).map(([k, v]) => `${ItemLabels[k as Item]} - ${v}`).join("\n")}
 `);

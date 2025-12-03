@@ -1,4 +1,5 @@
 import type { Action } from "../actions";
+import { printAction } from "../console";
 import type { Entity } from "../entity";
 import { command_Mine } from "./mine";
 import { command_Move } from "./move";
@@ -9,6 +10,9 @@ export const runAction = function(this: Entity, action: Action) {
     if (!this.actions.includes(action.type)) {
         action.complete();
         return;
+    }
+    if (!action.isStarted) {
+        printAction(this, action);
     }
     switch (action.type) {
         case "MOVE":

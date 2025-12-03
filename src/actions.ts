@@ -53,12 +53,8 @@ export class Actions {
         this.mapUpdates = [];
     }
     getActions() {
-        const now = Date.now();
-        const toReturn = [...this.stack.filter((a) => !a.isComplete)];
-        this.stack = this.stack.filter(
-            (a) => a.timeEnd >= now && !a.isComplete
-        );
-        return toReturn;
+        this.stack = [...this.stack.filter((a) => !a.isComplete)];
+        return this.stack;
     }
     addAction(type: ActionType, { delta, value, timeEnd, entityId }: IAction) {
         const a = new Action(type, { delta, value, timeEnd, entityId });
