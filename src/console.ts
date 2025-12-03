@@ -1,6 +1,7 @@
 import type { Action, ActionType } from "./actions";
 import { ItemLabels, type Item } from "./invent";
 import { state } from "./state";
+import { Recipes } from "./story";
 
 const output = document.querySelector('#console div#output');
 
@@ -56,6 +57,7 @@ const metaCommand = (cmd: string, value: string): boolean | undefined => {
         case "storage": command_Storage(); return true;
         case "inventory": command_Inventory(); return true;
         case "select": return selectEntity(parseInt(value));
+        case "crafting": return command_Crafting(value);
         default: return undefined;
     };
 };
@@ -83,24 +85,28 @@ export const printEntity = (id: number, msg: string) => {
     print(`[ENTITY:${id}] ${msg}`);
 }
 
-export const print = (str: string) => {
+export const print = (str: string, className?: string) => {
     str.split("\n").map(
         (line) => {
             const p = document.createElement("p");
-            p.textContent = line || " ";
+            p.textContent = line || "";
+            if (className) {
+                p.className = className;
+            }
             output?.appendChild(p);
         }
     );
     output?.scrollTo(0, output.scrollHeight ?? 0);
 };
 
-export const command_Welcome = () => {
-    print(`
-Welcome
-========
+export const printImportant = (str: string) => {
+    print(str, "important");
+};
 
-Type "help" to get started
-`);
+export const command_Welcome = () => {
+    printImportant(`Welcome
+========
+Type "help" to get started`);
 };
 
 export const command_List = () => {
@@ -113,6 +119,10 @@ ${state.entities.map((e) => `[${e.id}] - ${e.type}`).join("\n")}
 };
 
 export const command_Help = () => {
+    const extra: string[] = [];
+    if (state.story.STORAGE_FIRST) {
+        extra.push(`crafting    - List and craft available recipes`);
+    }
     print(`
 HELP
 =====
@@ -126,6 +136,7 @@ select <n> - Select entity for control
 selected   - Show currently selected entitiy
 commands   - List available commands for selected entity
 inventory  - Show current entity inventory
+${extra.join("\n")}
 `);
 };
 
@@ -173,4 +184,26 @@ INVENTORY
 ${Object.entries(selected.inventory.inventory).map(([k, v]) => `${ItemLabels[k as Item]} - ${v}`).join("\n")}
 `);
 
+};
+
+export const command_Crafting = (recipe?: string) => {
+    if (!state.story.STORAGE_FIRST) {
+        return undefined;
+    }
+    if (!recipe) {
+        const recipes = Object.entries(Recipes).filter(
+            ([, v]) => (v.story ?? []).every((s) => state.story[s])
+        ).map(
+            ([k, v]) => `${k}\n${v.description}\n${v.ingredients.map((r) => ` - ${r.item} x ${r.count}`).join("\n")}`
+        );
+        print(`
+CRAFTING
+=========
+
+Usage: "crafting <recipe>"
+
+${recipes?.length ? "- Recipes -\n\n" + recipes.join("\n\n") : " - No recipes available -"}
+`);
+    }
+    return true;
 };

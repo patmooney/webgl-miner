@@ -1,7 +1,8 @@
 import { Actions } from "./actions";
-import { tileW } from "./constants";
+import { HISTORY_MAX, tileW } from "./constants";
 import type { Entity } from "./entity";
 import { Inventory } from "./invent";
+import type { WayPoint } from "./story";
 import { clamp } from "./utils/maths";
 import type { Vec2D } from "./world";
 
@@ -15,10 +16,12 @@ class State {
     selectedEntity: number | undefined;
     inventory: Inventory;
     entities: Entity[] = [];
+    story: { [key in WayPoint]?: boolean } = {};
+    history: string[] = [];
 
-    constructor() {
-        this.actions = new Actions();
-        this.inventory = new Inventory();
+    constructor(actions = new Actions(), inventory = new Inventory()) {
+        this.actions = actions;
+        this.inventory = inventory;
     }
     resolution(gl: WebGL2RenderingContext): [number, number] {
         const ratio = gl.canvas.height / gl.canvas.width;
@@ -38,6 +41,10 @@ class State {
             return;
         }
         this.zoom = nZoom;
+    }
+    getHistory() {
+        this.history = this.history.slice(-HISTORY_MAX).toReversed().filter((v, idx, arr) => arr.indexOf(v) === idx).reverse();
+        return this.history;
     }
 }
 

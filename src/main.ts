@@ -9,13 +9,13 @@ import * as csl from "./console";
 import { World } from './world';
 import { size, tileW } from './constants';
 import { initMap } from './map';
-
-
-const input = document.querySelector('#console input');
+import { Inventory } from './invent';
+import { onStorage } from './story';
 
 const loop = async (gl: WebGL2RenderingContext) => {
     initMap();
     const w = new World();
+    state.inventory = new Inventory(onStorage);
 
     state.entities.push(new Entity(state.entities.length, "MINER", ["ROTATE", "MOVE", "MINE", "UNLOAD"]));
 
@@ -28,20 +28,13 @@ const loop = async (gl: WebGL2RenderingContext) => {
     }
     await w.init(gl);
 
+    /*
+    state.story.STORAGE_FIRST = true;
+    state.story.IRON_FIRST = true;
+    */
+
     let time = 0;
-
-    input?.addEventListener("keyup", (e) => {
-        const key = (e as KeyboardEvent).key;
-        const val = (e.target as HTMLInputElement).value;
-        if (key === "Enter" && val.length) {
-            csl.parseCmd(val);
-            (e.target as HTMLInputElement).value = "";
-        }
-    });
-
     csl.command_Welcome();
-    (input as HTMLInputElement)?.focus();
-
 
     while(true) {
         await new Promise<void>((finishRender) => requestAnimationFrame(() => {

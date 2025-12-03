@@ -1,8 +1,14 @@
 import { MIN_ZOOM, state } from "./state";
 import type { Vec2D } from "./world";
+import * as csl from "./console";
+import { HISTORY_MAX } from "./constants";
 
 let dragStart: Vec2D | undefined;
 let canvas = document.getElementById("c");
+const input = document.querySelector('#console input');
+
+let historyIdx = HISTORY_MAX;
+
 export const initMouse = () => {
     canvas?.addEventListener("mousedown", (e: Event) => {
         dragStart = [(e as MouseEvent).clientX, (e as MouseEvent).clientY];
@@ -22,8 +28,38 @@ export const initMouse = () => {
     canvas?.addEventListener("mouseup", () => dragStart = undefined);
     canvas?.addEventListener("mouseout", () => dragStart = undefined);
 
-    document.addEventListener("wheel", (e) => {
+    canvas?.addEventListener("wheel", (e) => {
         const deltaY = (e as WheelEvent).deltaY;
         state.setZoom(state.zoom + (deltaY > 0 ? 1 : -1));
     });
+
+    input?.addEventListener("keyup", (e) => {
+        const key = (e as KeyboardEvent).key;
+        const val = (e.target as HTMLInputElement).value;
+        if (key === "Enter" && val.length) {
+            state.history.push(val);
+            csl.parseCmd(val);
+            (e.target as HTMLInputElement).value = "";
+            const history = state.getHistory();
+            historyIdx = Math.min(history.length, HISTORY_MAX);
+        }
+        if (key === "ArrowUp") {
+            if (historyIdx > 0) {
+                const history = state.getHistory();
+                historyIdx--;
+                (input as HTMLInputElement).value = history[historyIdx] ?? "";
+            }
+        }
+        if (key === "ArrowDown") {
+            const history = state.getHistory();
+            if (historyIdx >= history.length) {
+                (input as HTMLInputElement).value = "";
+            } else {
+                historyIdx++;
+                (input as HTMLInputElement).value = history[historyIdx] ?? "";
+            }
+        }
+    });
+
+    (input as HTMLInputElement)?.focus();
 };

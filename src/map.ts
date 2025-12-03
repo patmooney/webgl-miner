@@ -29,7 +29,7 @@ export const TILE_TYPE = {
 } as const satisfies Record<TILE, number>;
 
 export const TILE_DROP = {
-    ROCK: [{ item: "stone", chance: 1 }]
+    ROCK: [{ item: "stone", chance: 1 }, { item: "iron", chance: 0.05 }]
 } as const satisfies { [key in TILE]?: { item: Item, chance: number }[] };
 
 export const getTileType = (tile: number): TILE => {

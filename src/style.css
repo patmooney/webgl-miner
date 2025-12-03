@@ -26,10 +26,23 @@ div#console > div#output {
     font-family: courier;
     color: #55ff55;
 }
+
 div#output > p {
     padding: 0;
     margin: 0;
     line-height: 1rem;
+    white-space: pre-line;
+}
+
+div#output > p:empty:before {
+  content: ' ';
+  white-space: pre;
+}
+
+div#output > p.important {
+    background-color: #2b882b;
+    padding: .5rem;
+    color: white;
 }
 
 div.bang {
