@@ -4,7 +4,7 @@ import './style.css'
 import * as webglUtils from "./utils/webgl.js";
 
 import t from "./assets/atlas.png";
-import { SATW, size, TILE_STORE_SIZE, tileW } from './constants.js';
+import { SATW, size, tileW } from './constants.js';
 import { getMap, type Tile } from './map.js';
 import { state } from './state.js';
 
