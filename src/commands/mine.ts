@@ -1,24 +1,34 @@
 import type { Entity } from "../entity";
 import type { Vec2D, Angle } from "../constants";
 import type { Action } from "../actions";
-import { coordToTile, getNeighbours, getTileAt, TILE_TYPE } from "../map";
+import { coordToTile, getNeighbours, getTileAt, TILE_DURABILITY, TILE_TYPE, type Tile } from "../map";
 import { state } from "../state";
+
+const DAMAGE = 1;
 
 export const command_Mine = function(this: Entity, action: Action) {
     action.complete();
-    const [target, tileN] = getFacingTile(coordToTile(this.coords), this.angle, 1);
-    if (tileN === TILE_TYPE.ROCK || tileN === TILE_TYPE.ORE) {
-        const neighbours = getNeighbours(target);
-        state.actions.addMapUpdate({ tile: target, type: TILE_TYPE.FLOOR });
-        for (let n of neighbours) {
-            if (n.type === TILE_TYPE.SHADOW) {
-                state.actions.addMapUpdate({ tile: n.tile, type: TILE_TYPE.ROCK });
+    const tile = getFacingTile(coordToTile(this.coords), this.angle, 1);
+    if (tile.type === TILE_TYPE.ROCK || tile.type === TILE_TYPE.ORE) {
+
+        let durability = tile.durability * TILE_DURABILITY[tile.tile];
+        durability -= DAMAGE;
+
+        if (durability <= 0) { // tile is done
+            const neighbours = getNeighbours(tile.coord);
+            state.actions.addMapUpdate({ ...tile, type: TILE_TYPE.FLOOR, durability: 1 });
+            for (let n of neighbours) {
+                if (n.type === TILE_TYPE.SHADOW) {
+                    state.actions.addMapUpdate({ ...n, type: TILE_TYPE.ROCK, durability: 1 });
+                }
             }
+        } else {
+            state.actions.addMapUpdate({ ...tile, durability: durability / TILE_DURABILITY[tile.tile] });
         }
     }
 };
 
-export const getFacingTile = (tile: Vec2D, angle: Angle, distance = 1): [Vec2D, number] => {
+export const getFacingTile = (tile: Vec2D, angle: Angle, distance = 1): Tile => {
     const target: Vec2D = [...tile];
     if (angle === 0) {
         target[0] += distance;
@@ -29,5 +39,5 @@ export const getFacingTile = (tile: Vec2D, angle: Angle, distance = 1): [Vec2D, 
     } else if (angle === 3) {
         target[1] += distance;
     }
-    return [target, getTileAt(target)];
+    return getTileAt(target);
 };

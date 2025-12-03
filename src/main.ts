@@ -15,6 +15,7 @@ const input = document.querySelector('#console input');
 const output = document.querySelector('#console div#output');
 
 const loop = async (gl: WebGL2RenderingContext) => {
+    initMap();
     const w = new World();
 
     entities.push(new Entity(entities.length, "MINER", ["ROTATE", "MOVE", "MINE"]));
@@ -22,7 +23,6 @@ const loop = async (gl: WebGL2RenderingContext) => {
     state.camera = [((size/2) - 9) * tileW, ((size/2) - 6) * tileW];
 
     initMouse();
-    initMap();
 
     for (let e of entities) {
         await e.init(gl);
@@ -214,6 +214,7 @@ const selectEntity = (entityId: number) => {
 const run = () => {
     const canvas = document.querySelector("#c") as HTMLCanvasElement;
     const gl = canvas.getContext("webgl2", { premultipliedAlpha: false });
+    gl?.getExtension("EXT_color_buffer_float");
 
     if (!gl) {
         return;

@@ -4,8 +4,8 @@ import './style.css'
 import * as webglUtils from "./utils/webgl.js";
 
 import t from "./assets/atlas.png";
-import { size, tileW } from './constants.js';
-import { getMap, type MapUpdate } from './map.js';
+import { SATW, size, TILE_STORE_SIZE, tileW } from './constants.js';
+import { getMap, type Tile } from './map.js';
 import { state } from './state.js';
 
 // BLOCK TYPES
@@ -18,9 +18,6 @@ type WorldBinds = {
     camera: WebGLUniformLocation,
     resolution: WebGLUniformLocation,
 };
-
-const ATLAS_IMAGE_NUM = 3; // number of textures in our atlas
-const SATW = 1 / ATLAS_IMAGE_NUM;
 
 export class World {
     private indices: Uint16Array;
@@ -129,8 +126,8 @@ export class World {
         const bTypes = getMap();
 
         gl.texImage2D(
-            gl.TEXTURE_2D, 0, gl.R32I, size, size, 0, gl.RED_INTEGER,
-            gl.INT, bTypes
+            gl.TEXTURE_2D, 0, gl.RG32F, size, size, 0, gl.RG,
+            gl.FLOAT, bTypes
         );
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -141,12 +138,15 @@ export class World {
         gl.bindVertexArray(null);
     }
 
-    update(gl: WebGL2RenderingContext, updates?: MapUpdate[]) {
+    update(gl: WebGL2RenderingContext, updates?: Tile[]) {
         if (updates?.length && this.blockTex) {
             gl.bindTexture(gl.TEXTURE_2D, this.blockTex);
             updates.forEach(
                 (update) => {
-                    gl.texSubImage2D(gl.TEXTURE_2D, 0, update.tile[1], update.tile[0], 1, 1, gl.RED_INTEGER, gl.INT, new Int32Array([update.type]))
+                    gl.texSubImage2D(
+                        gl.TEXTURE_2D, 0, update.coord[1], update.coord[0], 1, 1,
+                        gl.RG, gl.FLOAT, new Float32Array([update.type, update.durability])
+                    )
                 }
             );
             gl.bindTexture(gl.TEXTURE_2D, null);

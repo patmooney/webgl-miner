@@ -1,8 +1,9 @@
 export const tileW = 40;
-export const size = 100;
+export const size = 20;
 
-export const ATLAS_IMAGE_NUM = 3; // number of textures in our atlas
+export const ATLAS_IMAGE_NUM = 5; // number of textures in our atlas
 export const SATW = 1 / ATLAS_IMAGE_NUM;
+export const TILE_STORE_SIZE = 2;
 
 export type Vec2D = [number, number];
 

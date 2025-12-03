@@ -56,8 +56,8 @@ export class Entity {
         this.positions = new Float32Array([
             0, 0, SATW*2, 0,
             0, tileW, SATW*3, 0,
-            tileW, 0, SATW*2, SATW*3,
-            tileW, tileW, SATW*3, SATW*3
+            tileW, 0, SATW*2, 1,
+            tileW, tileW, SATW*3, 1
         ]);
         this.coords = [Math.round((size / 2) * tileW) - (tileW / 2), Math.round((size / 2) * tileW) - (tileW / 2)];
         this.rotation[0] = Math.sin(this.rad);

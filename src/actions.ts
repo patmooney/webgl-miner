@@ -1,5 +1,5 @@
 import { size } from "./constants";
-import { updateMap, type MapUpdate } from "./map";
+import { updateMap, type Tile } from "./map";
 import type { Vec2D } from "./world";
 
 export type ActionType = "ROTATE" | "MOVE" | "MINE";
@@ -46,7 +46,7 @@ export class Action implements IAction {
 
 export class Actions {
     stack: Action[];
-    mapUpdates: MapUpdate[];
+    mapUpdates: Tile[];
 
     constructor() {
         this.stack = [];
@@ -69,7 +69,7 @@ export class Actions {
         this.mapUpdates = [];
         return toReturn;
     }
-    addMapUpdate(update: MapUpdate) {
+    addMapUpdate(update: Tile) {
         this.mapUpdates.push(update);
         updateMap(update);
     }

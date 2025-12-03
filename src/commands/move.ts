@@ -1,7 +1,7 @@
 import type { Entity } from "../entity";
 import { tileW, CARDINAL_MAP, type Vec2D, type Angle } from "../constants";
 import type { Action } from "../actions";
-import { coordToTile, getTileAt } from "../map";
+import { coordToTile, getTileAt, TILE_NAVIGATE } from "../map";
 import { clamp } from "../utils/maths";
 
 export const command_Move = function(this: Entity, action: Action) {
@@ -58,7 +58,8 @@ const getMaxMove = (moves: number, angle: Angle, coords: Vec2D) => {
         current[0] += delta[0];
         current[1] += delta[1];
         const tileCoord = coordToTile(current);
-        if (getTileAt(tileCoord)) {
+        const tile = getTileAt(tileCoord);
+        if (!TILE_NAVIGATE[tile.tile]) {
             break;
         }
         allowed++;

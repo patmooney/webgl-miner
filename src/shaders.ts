@@ -13,10 +13,11 @@ uniform vec2 camera;
 // Used to pass in the resolution of the canvas
 uniform vec2 u_resolution;
 
-uniform highp isampler2D u_data;   // integer sampler
+uniform highp sampler2D u_data;
 
 out vec2 v_texcoord;
 out float b_type;
+out float durability;
 
 // all shaders have a main function
 void main() {
@@ -42,7 +43,10 @@ void main() {
 
   gl_Position = vec4(clipSpace, 0, 1);
 
-  b_type = float(texelFetch(u_data, ivec2(row, col), 0).r);
+  vec2 tile = texelFetch(u_data, ivec2(row, col), 0).rg;
+
+  b_type = tile.r;
+  durability = tile.g;
   v_texcoord = a_texcoord;
 }
 `;
@@ -55,6 +59,7 @@ precision highp float;
 in vec2 v_texcoord;
 
 in float b_type;
+in float durability;
 
 // The texture.
 uniform sampler2D u_texture;
@@ -63,12 +68,8 @@ uniform sampler2D u_texture;
 out vec4 outColor;
 
 void main() {
-  if (b_type < 0.0) {
-    outColor = vec4(0.0, 0.0, 0.0, 0.92);
-  } else {
-    vec2 tcoord = vec2(v_texcoord.x + (0.33 * b_type), v_texcoord.y);
-    outColor = texture(u_texture, tcoord);
-  }
+  vec2 tcoord = vec2(v_texcoord.x + (0.2 * b_type), v_texcoord.y);
+  outColor = texture(u_texture, tcoord) * vec4(1.0, durability, durability, 1.0);
 }`;
 
 export const entityVertexSource = `#version 300 es
