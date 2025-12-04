@@ -1,15 +1,16 @@
-import { entityFragmentSource, entityVertexSource } from './shaders';
-import './style.css'
+import { entityFragmentSource, entityVertexSource } from "./shaders";
+import "./style.css"
 
-import * as webglUtils from "./utils/webgl.js";
+import * as webglUtils from "./utils/webgl";
 
 import t from "./assets/atlas.png";
-import type { Action, ActionType } from './actions.js';
-import { tileW, size, ANGLE_TO_RAD, SATW, type Angle } from './constants';
-import { runAction } from './commands/index.js';
-import { state } from './state.js';
-import { Inventory } from './invent.js';
-import { printError, printWarning } from './console.js';
+import type { Action, ActionType } from "./actions";
+import { tileW, size, ANGLE_TO_RAD, SATW, type Angle } from "./constants";
+import { runAction } from "./commands/index";
+import { state } from "./state";
+import { Inventory } from "./invent";
+import { printError, printWarning } from "./console";
+import { ModuleStats, type Item } from "./story";
 
 // BLOCK TYPES
 type Vec2D = [number, number];
@@ -26,7 +27,13 @@ type EntityBinds = {
 
 export type EntityType = "MINER";
 
-export class Entity {
+export interface IEntityStats {
+    drillSpeed: number;
+    battery: number;
+    speed: number;
+}
+
+export class Entity implements IEntityStats {
     id: number;
     type: EntityType;
 
@@ -37,6 +44,8 @@ export class Entity {
     angle: Angle = 3;
     inventory: Inventory;
 
+    speed: number;
+    drillSpeed: number;
     battery: number;
     maxBattery: number;
 
@@ -54,10 +63,11 @@ export class Entity {
     vao: WebGLVertexArrayObject | undefined;
     vbo: WebGLBuffer | undefined;
     posBuf: WebGLBuffer | undefined;
+    modules: Item[];
 
     atlas: WebGLTexture | undefined;
 
-    constructor(id: number, type: EntityType, actions: ActionType[] = ["MOVE", "ROTATE"], inventorySize: number = 10) {
+    constructor(id: number, type: EntityType, actions: ActionType[] = ["MOVE", "ROTATE"], inventorySize: number = 10, modules?: Item[]) {
         this.id = id;
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
@@ -72,11 +82,47 @@ export class Entity {
         this.actions = actions;
         this.type = type;
         this.inventory = new Inventory(undefined, inventorySize);
-        this.battery = 11;
-        this.maxBattery = 100;
+
+        this.maxBattery = 0;
+        this.battery = this.maxBattery;
+        this.speed = 0;
+        this.drillSpeed = 0;
+        this.modules = modules ?? [];
     }
 
     async init(gl: WebGL2RenderingContext) {
+        await this.initGraphics(gl);
+        this.balanceModules();
+        this.battery = this.maxBattery;
+    }
+
+    installModule(name: Item): boolean {
+        const mod = ModuleStats[name];
+        if (!mod) {
+            return false;
+        }
+        if (this.modules.find((installed) => ModuleStats[installed]?.type === mod.type)) {
+            // can't have two moduels of same type ... for now
+            return false;
+        }
+        this.modules.push(name);
+        this.balanceModules();
+        return true;
+    }
+
+    balanceModules() {
+        this.speed = 0;
+        this.drillSpeed = 0;
+        this.maxBattery = 0;
+        this.modules.forEach((m) => {
+            const stats = ModuleStats[m]?.stats;
+            this.speed += stats?.speed ?? 0;
+            this.maxBattery += stats?.battery ?? 0;
+            this.drillSpeed += stats?.drillSpeed ?? 0;
+        });
+    }
+
+    async initGraphics(gl: WebGL2RenderingContext) {
         const program = webglUtils.createProgramFromSources(gl, [entityVertexSource, entityFragmentSource]);
 
         if (!program) {

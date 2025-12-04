@@ -9,8 +9,8 @@ import * as csl from "./console";
 import { World } from './world';
 import { size, tileW } from './constants';
 import { initMap } from './map';
-import { Inventory, type Item } from './invent';
-import { onCraft, onStorage, onStory, type WayPoint } from './story';
+import { Inventory } from './invent';
+import { onStorage, onStory, type WayPoint, type Item } from './story';
 
 const loop = async (gl: WebGL2RenderingContext) => {
     initMap();
@@ -18,7 +18,14 @@ const loop = async (gl: WebGL2RenderingContext) => {
     state.inventory = new Inventory(onStorage);
     state.onStory = onStory;
 
-    state.entities.push(new Entity(state.entities.length, "MINER", ["ROTATE", "MOVE", "MINE", "UNLOAD", "RECHARGE"]));
+    state.entities.push(
+        new Entity(
+            state.entities.length, "MINER",
+            ["ROTATE", "MOVE", "MINE", "UNLOAD", "RECHARGE"],
+            10,
+            ["module_basic_drill", "module_basic_battery", "module_basic_motor"]
+        )
+    );
 
     state.camera = [((size/2) - 9) * tileW, ((size/2) - 6) * tileW];
 
@@ -30,16 +37,10 @@ const loop = async (gl: WebGL2RenderingContext) => {
     await w.init(gl);
 
     const initialStory: WayPoint[] = [];
-    const initialStorage: [Item, number][] = [
-/*        ["stone", 200],
-        ["iron", 200],
-        ["carbon", 200],
-        ["copper", 200],*/
-    ];
+    const initialStorage: [Item, number][] = [];
 
     initialStorage.forEach(([i, c]) => state.inventory.add(i, c));
     initialStory.forEach((w) => state.addWaypoint(w));
-    onCraft("CONTROL_INTERFACE");
 
     let time = 0;
     csl.command_Welcome();

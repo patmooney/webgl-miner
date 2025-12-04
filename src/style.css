@@ -58,8 +58,8 @@ div#nav > div:hover {
 }
 
 div.active {
-    background-color: #2b882b;
-    color: white;
+    background-color: #2b882b !important;
+    color: white !important;
 }
 
 div.flex-row {
@@ -161,4 +161,8 @@ div.border {
     border: solid 1px #ccc;
     padding: .5rem;
     margin: .2rem;
+}
+
+div.items-center {
+    align-items: center;
 }

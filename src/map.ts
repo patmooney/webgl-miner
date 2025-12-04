@@ -1,5 +1,5 @@
 import { size, tileW, TILE_STORE_SIZE } from "./constants";
-import type { Item } from "./invent";
+import type { Item } from "./story";
 import type { Vec2D } from "./world";
 
 export type TILE = "SHADOW" | "ROCK" | "FLOOR" | "ORE" | "HOME";

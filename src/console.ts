@@ -1,8 +1,7 @@
 import type { Action, ActionType } from "./actions";
 import type { Entity } from "./entity";
-import { ItemLabels, type Item } from "./invent";
 import { state } from "./state";
-import { onCraft, Recipes, type RecipeInterface, type RecipeName } from "./story";
+import { onCraft, Recipes, type RecipeInterface, type RecipeName, type Item, ItemLabels } from "./story";
 
 const output = document.querySelector('#control_console div#output');
 
@@ -46,11 +45,11 @@ const entityCommand = (cmd: string, value: string): boolean | undefined => {
 
     const addAction = (actionType: ActionType) => {
         const intVal = parseInt(value ?? 0);
-        const action = state.actions.addAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) });
-        if (actionType === "MOVE" || actionType === "ROTATE") {
+        const action = state.actions.addAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal });
+        if (actionType === "MOVE" || actionType === "ROTATE" || actionType === "MINE") {
             // OK the value for these is how many times to repeat
             for (let i = 1; i < intVal; i++) {
-                state.actions.addSilentAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) }, action.id);
+                state.actions.addSilentAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal }, action.id);
             }
         }
         return true;
@@ -76,6 +75,7 @@ const metaCommand = (cmd: string, value: string): boolean | undefined => {
         case "halt": command_Halt(); return true;
         case "select": return selectEntity(parseInt(value));
         case "crafting": return command_Crafting(value);
+        case "modules": command_Modules(); return true;
         default: return undefined;
     };
 };
@@ -158,6 +158,7 @@ inventory  - Show current entity inventory.
 battery    - Show current entity battery value.
 cancel     - Cancel current action where possible.
 halt       - Cancel all queued actions including current where possible.
+modules    - List currently installed modules and stats.
 ${extra.join("\n")}
 `);
 };
@@ -216,6 +217,22 @@ export const command_Battery = () => {
     }
     print(`Entity [${selected.id}] battery: ${selected.battery} / 100`);
 };
+
+export const command_Modules = () => {
+    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
+    if (!selected) {
+        return printError(`No entity selected`);
+    }
+    print(`
+INSTALLED MODULES
+==================
+
+${selected.modules.map((mod) => ` - ${ItemLabels[mod]}`).join("\n")}
+
+[ Movement: ${selected.speed} ] [ Drill: ${selected.drillSpeed} ] [ Battery: ${selected.battery} / ${selected.maxBattery} ]
+`);
+};
+
 
 export const command_Cancel = () => {
     const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;

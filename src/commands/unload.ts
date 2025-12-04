@@ -2,7 +2,7 @@ import type { Entity } from "../entity";
 import type { Action } from "../actions";
 import { coordToTile, getTileAt, TILE_TYPE } from "../map";
 import { state } from "../state";
-import type { Item } from "../invent";
+import type { Item } from "../story";
 import { printEntity } from "../console";
 
 export const BATTERY_COST = 0;

@@ -1,7 +1,7 @@
 import { printImportant } from "./console";
-import type { Item } from "./invent";
 import { state } from "./state";
 import * as controlInterface from "./control.interface";
+import type { IEntityStats } from "./entity";
 
 export type WayPoint =
     "STORAGE_FIRST" |
@@ -9,10 +9,51 @@ export type WayPoint =
     "CARBON_FIRST" |
     "COPPER_FIRST" |
     "INTERFACE_CONTROL_INTERFACE" |
-    "INTERFACE_AUTOMATION_INTERFACE";
+    "INTERFACE_AUTOMATION_INTERFACE" |
+    "INTERFACE_SMELTING";
 
-export type RecipeName = "VISUAL_SCAN_MODULE" | "AUTOMATION_INTERFACE" | "CONTROL_INTERFACE";
-export type CraftType = "INTERFACE" | "MODULE";
+export type RecipeName = "VISUAL_SCAN_MODULE" | "AUTOMATION_INTERFACE" | "CONTROL_INTERFACE" |
+    "BASIC_DRILL_MODULE" | "BASIC_MOTOR_MODULE" | "BASIC_BATTERY_MODULE" | "MINING_AUTOMATION_HULL" | "HOME_NAVIGATION_MODULE" | "SMELTING_INTERFACE";
+export type CraftType = "INTERFACE" | "MODULE" | "DEPLOYABLE";
+
+export type Item = "stone" | "iron" | "carbon" | "copper" | "coal"| "module_visual_scanner" | "module_basic_drill" | "module_basic_battery" | "module_basic_motor" | "deployable_mining_hull" | "module_home_navigation";
+
+export type ModuleType = "engine" | "battery" | "drill" | "navigation";
+
+export const ModuleStats: { [key in Item]?: { type: ModuleType, stats: Partial<IEntityStats> } } =  {
+    module_basic_battery: {
+        type: "battery",
+        stats: {
+            battery: 100
+        }
+    },
+    module_basic_drill: {
+        type: "drill",
+        stats: {
+            drillSpeed: 1
+        }
+    },
+    module_basic_motor: {
+        type: "engine",
+        stats: {
+            speed: 0.05
+        }
+    }
+}
+
+export const ItemLabels: Record<Item, string> = {
+    stone: "Stone",
+    iron: "Iron ore",
+    carbon: "Carbon",
+    copper: "Copper",
+    module_visual_scanner: "Visual Scanner",
+    module_basic_battery: "Basic Battery",
+    module_basic_drill: "Basic Drill",
+    module_basic_motor: "Basic Motor",
+    deployable_mining_hull: "Mining Automation Hull",
+    module_home_navigation: "Home Navigation Module",
+    coal: "Coal"
+} as const satisfies Record<Item, string>;
 
 export type RecipeBase = {
     ingredients: { item: Item, count: number }[];
@@ -21,7 +62,7 @@ export type RecipeBase = {
 };
 
 export type RecipeModule = RecipeBase & {
-    type: "MODULE";
+    type: "MODULE" | "DEPLOYABLE";
     item: Item;
 };
 
@@ -58,6 +99,64 @@ export const Recipes: Record<RecipeName, Recipe> = {
         description: "Allow automated remote instruction",
         type: "INTERFACE",
         waypoint: "INTERFACE_AUTOMATION_INTERFACE"
+    },
+    BASIC_BATTERY_MODULE: {
+        ingredients: [
+            { item: "stone", count: 20 },
+            { item: "iron", count: 10 }
+        ],
+        story: ["IRON_FIRST"],
+        description: "A very simple battery with limited capacity",
+        type: "MODULE",
+        item: "module_basic_battery"
+    },
+    BASIC_DRILL_MODULE: {
+        ingredients: [
+            { item: "iron", count: 30 }
+        ],
+        story: ["IRON_FIRST"],
+        description: "A brittle, dull drill",
+        type: "MODULE",
+        item: "module_basic_drill"
+    },
+    BASIC_MOTOR_MODULE: {
+        ingredients: [
+            { item: "stone", count: 20 },
+            { item: "iron", count: 50 }
+        ],
+        story: ["IRON_FIRST"],
+        description: "5hp of pure disappointment",
+        type: "MODULE",
+        item: "module_basic_motor"
+    },
+    MINING_AUTOMATION_HULL: {
+        ingredients: [
+            { item: "iron", count: 10 }
+        ],
+        story: ["IRON_FIRST"],
+        description: "An empty mining automation hull (deployable)",
+        type: "DEPLOYABLE",
+        item: "deployable_mining_hull"
+    },
+    HOME_NAVIGATION_MODULE: {
+        ingredients: [
+            { item: "carbon", count: 10 },
+            { item: "copper", count: 10 }
+        ],
+        story: ["CARBON_FIRST", "COPPER_FIRST"],
+        description: "Provides automated routing to nearest base",
+        type: "MODULE",
+        item: "module_home_navigation"
+    },
+    SMELTING_INTERFACE: {
+        ingredients: [
+            { item: "iron", count: 50 },
+            { item: "stone", count: 200 }
+        ],
+        story: ["IRON_FIRST"],
+        description: "For the production of alloy metals",
+        type: "INTERFACE",
+        waypoint: "INTERFACE_SMELTING"
     }
 };
 

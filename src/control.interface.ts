@@ -23,7 +23,7 @@ export const init = () => {
     listEntities();
 
     if (state.selectedEntity !== undefined) {
-        const actions = state.actions.getActions().filter((a) => a.entityId === state.selectedEntity);
+        const actions = state.actions.getActions().filter((a) => a.entityId === state.selectedEntity && !a.isSilent);
         listActions(actions);
     }
 
@@ -48,11 +48,13 @@ export const init = () => {
         );
         const eDiv = document.querySelector(`#interface_control > div:first-child > div[data-id="${custom.detail}"]`);
         (eDiv as HTMLDivElement)?.classList.add("active");
+        const actions = state.actions.getActions().filter((a) => a.entityId === state.selectedEntity && !a.isSilent);
+        listActions(actions);
     });
 };
 
 const listActions = (actions: Action[]) => {
-    const container = document.querySelector("#control_control > div:last-child");
+    const container = document.querySelector("#interface_control > div:last-child");
     if (!container) {
         return;
     }
@@ -78,10 +80,13 @@ const removeAction = (action: Action) => {
 };
 
 const bindButtons = (control: HTMLDivElement) => {
-    const [up, up5, left, right, mine, unload] = Array.from(control.querySelectorAll("button"));
+    const [up, up5, left, right, mine, mine5, unload, recharge] = Array.from(control.querySelectorAll("button"));
     up5.addEventListener("click", () => {
         if (state.selectedEntity !== undefined) {
             state.actions.addAction("MOVE", { value: 5, entityId: state.selectedEntity });
+            for (let i = 1; i < 5; i++) {
+                state.actions.addSilentAction("MOVE", { value: 1, entityId: state.selectedEntity });
+            }
         }
     });
     up.addEventListener("click", () => {
@@ -104,9 +109,22 @@ const bindButtons = (control: HTMLDivElement) => {
             state.actions.addAction("MINE", { value: 0, entityId: state.selectedEntity });
         }
     });
+    mine5.addEventListener("click", () => {
+        if (state.selectedEntity !== undefined) {
+            state.actions.addAction("MINE", { value: 5, entityId: state.selectedEntity });
+            for (let i = 1; i < 5; i++) {
+                state.actions.addSilentAction("MINE", { value: 1, entityId: state.selectedEntity });
+            }
+        }
+    });
     unload.addEventListener("click", () => {
         if (state.selectedEntity !== undefined) {
             state.actions.addAction("UNLOAD", { value: 0, entityId: state.selectedEntity });
+        }
+    });
+    recharge.addEventListener("click", () => {
+        if (state.selectedEntity !== undefined) {
+            state.actions.addAction("RECHARGE", { value: 100, entityId: state.selectedEntity });
         }
     });
 }

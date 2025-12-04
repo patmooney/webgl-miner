@@ -4,7 +4,7 @@ export const interface_Control = `
   <div id="interface_control" class="flex-row">
     <div></div>
     <div>
-        <div class="flex-col gap justified">
+        <div class="flex-col gap justified items-center">
             <div class="flex-row gap">
                 <div class="flex-row gap border">
                     <button>&#9651;</button>
@@ -17,7 +17,9 @@ export const interface_Control = `
             </div>
             <div class="flex-row gap justified border">
                 <button>Mine</button>
+                <button>Mine x 5</button>
                 <button>Unload</button>
+                <button>Recharge</button>
             </div>
         </div>
     </div>

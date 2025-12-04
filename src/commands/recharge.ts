@@ -21,7 +21,10 @@ export const command = function(this: Entity, action: Action) {
     if (action.timeEnd! > Date.now()) {
         return;
     }
-    if (this.battery >= this.maxBattery || action.shouldCancel) {
+    const target = action.value
+        ? (Math.max(0, Math.min(100, action.value)) / 100) * this.maxBattery
+        : this.maxBattery;
+    if (this.battery >= target || action.shouldCancel) {
         action.complete();
         return;
     }
