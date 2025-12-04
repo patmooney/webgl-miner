@@ -5,7 +5,9 @@ import { state } from "../state";
 import type { Item } from "../invent";
 import { printEntity } from "../console";
 
-export const command_Unload = function(this: Entity, action: Action) {
+export const BATTERY_COST = 0;
+
+export const command = function(this: Entity, action: Action) {
     action.complete();
 
     const tileCoord = coordToTile(this.coords);

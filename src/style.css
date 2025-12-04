@@ -126,6 +126,11 @@ div#output > p.error {
     color: white;
 }
 
+div#output > p.warning {
+    background-color: #3cc;
+    color: black;
+}
+
 div.bang {
     display: flex;
     width: 100%;

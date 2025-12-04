@@ -30,7 +30,11 @@ export const parseCmd = (val: string) => {
     printError(`Unknown command: ${cmd}`);
 };
 
-const printError = (str: string) => {
+export const printWarning = (str: string) => {
+    print (`[WARNING] ${str}`, "warning");
+}
+
+export const printError = (str: string) => {
     print(`[ERROR] ${str}`, "error");
 }
 
@@ -41,7 +45,14 @@ const entityCommand = (cmd: string, value: string): boolean | undefined => {
     }
 
     const addAction = (action: ActionType) => {
+        const intVal = parseInt(value ?? 0);
         state.actions.addAction(action, { entityId: selected.id, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) });
+        if (action === "MOVE" || action === "ROTATE") {
+            // OK the value for these is how many times to repeat
+            for (let i = 1; i < intVal; i++) {
+                state.actions.addSilentAction(action, { entityId: selected.id, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) });
+            }
+        }
         return true;
     };
 
@@ -60,6 +71,7 @@ const metaCommand = (cmd: string, value: string): boolean | undefined => {
         case "commands": command_Commands(); return true;
         case "storage": command_Storage(); return true;
         case "inventory": command_Inventory(); return true;
+        case "battery": command_Battery(); return true;
         case "select": return selectEntity(parseInt(value));
         case "crafting": return command_Crafting(value);
         default: return undefined;
@@ -80,7 +92,7 @@ const selectEntity = (entityId: number) => {
 }
 
 export const printAction = (e: Entity, a: Action | undefined) => {
-    if (!a) {
+    if (!a || a.isSilent) {
         return;
     }
     print(`[${(Date.now() / 1000).toFixed(0)}] Entity [${e.id}] - ${a.type}: ${a.value}`, "log");
@@ -141,6 +153,7 @@ select <n> - Select entity for control
 selected   - Show currently selected entitiy
 commands   - List available commands for selected entity
 inventory  - Show current entity inventory
+battery    - Show current entity battery value
 ${extra.join("\n")}
 `);
 };
@@ -190,6 +203,14 @@ Slots: ${selected.inventory.total} / ${selected.inventory.limit ?? "-"}
 ${Object.entries(selected.inventory.inventory).map(([k, v]) => `${ItemLabels[k as Item]} - ${v}`).join("\n")}
 `);
 
+};
+
+export const command_Battery = () => {
+    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
+    if (!selected) {
+        return printError(`No entity selected`);
+    }
+    print(`Entity [${selected.id}] battery: ${selected.battery} / 100`);
 };
 
 export const command_Crafting = (recipe?: string) => {

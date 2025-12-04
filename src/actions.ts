@@ -2,7 +2,7 @@ import { size } from "./constants";
 import { updateMap, type Tile } from "./map";
 import type { Vec2D } from "./world";
 
-export type ActionType = "ROTATE" | "MOVE" | "MINE" | "UNLOAD";
+export type ActionType = "ROTATE" | "MOVE" | "MINE" | "UNLOAD" | "RECHARGE";
 
 export const ACTION_ADD_EVENT = "ACTION_ADD";
 export const ACTION_COMPLETE_EVENT = "ACTION_REMOVE";
@@ -25,18 +25,20 @@ export class Action implements IAction {
     value?: number;
     timeEnd?: number;
     entityId: number;
-
+    
+    isSilent?: boolean = false;
     isComplete?: boolean = false;
     isStarted?: boolean = false;
 
 
-    constructor(type: ActionType, { delta, value, timeEnd, entityId }: IAction) {
+    constructor(type: ActionType, { delta, value, timeEnd, entityId }: IAction, isSilent = false) {
         this.type = type;
         this.delta = delta;
         this.value = value;
         this.timeEnd = timeEnd;
         this.entityId = entityId;
         this.id = crypto.randomUUID();
+        this.isSilent = isSilent;
 
         if (this.type === "ROTATE") {
             this.value = Math.max(Math.min(3, this.value ?? 0), -3);
@@ -76,6 +78,10 @@ export class Actions {
         const a = new Action(type, { delta, value, timeEnd, entityId });
         this.stack.push(a);
         this.hook.dispatchEvent(new CustomEvent(ACTION_ADD_EVENT, { detail: a }));
+    }
+    addSilentAction(type: ActionType, { delta, value, timeEnd, entityId }: IAction) {
+        const a = new Action(type, { delta, value, timeEnd, entityId }, true);
+        this.stack.push(a);
     }
     getMapUpdates() {
         const toReturn = [...this.mapUpdates];

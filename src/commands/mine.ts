@@ -4,10 +4,11 @@ import type { Action } from "../actions";
 import { coordToTile, getNeighbours, getTileAt, TILE_DROP, TILE_DURABILITY, TILE_TYPE, type Tile } from "../map";
 import { state } from "../state";
 
+export const BATTERY_COST = 2;
 const DAMAGE = 1;
 const MINE_TIME_MS = 2000;
 
-export const command_Mine = function(this: Entity, action: Action) {
+export const command = function(this: Entity, action: Action) {
     if (!action.isStarted) {
         action.timeEnd = Date.now() + MINE_TIME_MS
         action.start();

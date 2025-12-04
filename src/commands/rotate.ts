@@ -2,10 +2,12 @@ import type { Action } from "../actions";
 import { ANGLE_TO_RAD, FULL_ROTATION, type Angle } from "../constants";
 import type { Entity } from "../entity";
 
-export const command_Rotate = function (this: Entity, action: Action) {
+export const BATTERY_COST = 1;
+
+export const command = function (this: Entity, action: Action) {
     let t: number | undefined = this.targetR;
     if (!action.isStarted) {
-        t = this.angle + action.value!;
+        t = this.angle + (action.value! > 0 ? 1 : -1);
         if (t < 0) {
             t = 4 + t;
         }

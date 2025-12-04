@@ -9,6 +9,7 @@ import { tileW, size, ANGLE_TO_RAD, SATW, type Angle } from './constants';
 import { runAction } from './commands/index.js';
 import { state } from './state.js';
 import { Inventory } from './invent.js';
+import { printError } from './console.js';
 
 // BLOCK TYPES
 type Vec2D = [number, number];
@@ -35,6 +36,9 @@ export class Entity {
     rad: number = ANGLE_TO_RAD[3];
     angle: Angle = 3;
     inventory: Inventory;
+
+    battery: number;
+    maxBattery: number;
 
     target: Vec2D | undefined;
     targetR: Angle | undefined;
@@ -68,6 +72,8 @@ export class Entity {
         this.actions = actions;
         this.type = type;
         this.inventory = new Inventory(undefined, inventorySize);
+        this.battery = 100;
+        this.maxBattery = 100;
     }
 
     async init(gl: WebGL2RenderingContext) {
@@ -156,6 +162,11 @@ export class Entity {
     update(action?: Action) {
         if (action) {
             runAction.call(this, action);
+        }
+        if (this.battery <= 0) {
+            printError(`Entity ${this.id} has no battery`);
+        } else if (this.battery <= 10) {
+            printError(`Entity ${this.id} is low on battery`);
         }
     }
 

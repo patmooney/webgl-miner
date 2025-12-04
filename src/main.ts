@@ -18,7 +18,7 @@ const loop = async (gl: WebGL2RenderingContext) => {
     state.inventory = new Inventory(onStorage);
     state.onStory = onStory;
 
-    state.entities.push(new Entity(state.entities.length, "MINER", ["ROTATE", "MOVE", "MINE", "UNLOAD"]));
+    state.entities.push(new Entity(state.entities.length, "MINER", ["ROTATE", "MOVE", "MINE", "UNLOAD", "RECHARGE"]));
 
     state.camera = [((size/2) - 9) * tileW, ((size/2) - 6) * tileW];
 

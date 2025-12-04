@@ -4,9 +4,12 @@ import type { Action } from "../actions";
 import { coordToTile, getTileAt, TILE_NAVIGATE } from "../map";
 import { clamp } from "../utils/maths";
 
-export const command_Move = function(this: Entity, action: Action) {
+export const BATTERY_COST = 1;
+
+export const command = function(this: Entity, action: Action) {
     if (!action.isStarted) {
-        const value = getMaxMove(action.value!, this.angle, this.coords);
+        const moves = 1; // action.value!; - OK we only do a single move per action now, to account for battery
+        const value = getMaxMove(moves, this.angle, this.coords);
         if (this.angle === 3) { // UP
             this.target = [this.coords[0], this.coords[1] + (value * tileW)];
         }
@@ -61,7 +64,7 @@ const getMaxMove = (moves: number, angle: Angle, coords: Vec2D) => {
         const tile = getTileAt(tileCoord);
         if (!TILE_NAVIGATE[tile.tile]) {
             break;
-        }
+         }
         allowed++;
     }
     return allowed;
