@@ -8,6 +8,7 @@ import type { Vec2D } from "./world";
 
 export const MAX_ZOOM = 10;
 export const MIN_ZOOM = -3;
+export const ENTITY_SELECTED_EVENT = "ENTITY_SELECTED";
 
 class State {
     camera: Vec2D = [0, 0];
@@ -20,10 +21,19 @@ class State {
     history: string[] = [];
     onStory?: (waypoint: WayPoint) => void;
 
+    entityHook: EventTarget;
+
     constructor(actions = new Actions(), inventory = new Inventory(), onStory?: (waypoint: WayPoint) => void) {
         this.actions = actions;
         this.inventory = inventory;
         this.onStory = onStory;
+        this.entityHook = new EventTarget();
+    }
+    selectEntity(id: number) {
+        if (this.entities.find((e) => e.id === id)) {
+            this.selectedEntity = id;
+            this.entityHook.dispatchEvent(new CustomEvent(ENTITY_SELECTED_EVENT, { detail: id }));
+        }
     }
     resolution(gl: WebGL2RenderingContext): [number, number] {
         const ratio = gl.canvas.height / gl.canvas.width;

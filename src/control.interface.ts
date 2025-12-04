@@ -1,7 +1,7 @@
 import { ACTION_ADD_EVENT, ACTION_COMPLETE_EVENT, type Action, type ActionEventType } from "./actions";
 import { onNav } from "./input";
 import { interface_Control } from "./interface/control";
-import { state } from "./state";
+import { ENTITY_SELECTED_EVENT, state } from "./state";
 
 export const init = () => {
     const nav = document.getElementById("nav");
@@ -20,6 +20,7 @@ export const init = () => {
     context?.appendChild(control);
 
     bindButtons(control);
+    listEntities();
 
     if (state.selectedEntity !== undefined) {
         const actions = state.actions.getActions().filter((a) => a.entityId === state.selectedEntity);
@@ -32,11 +33,21 @@ export const init = () => {
             addAction(evt.detail);
         }
     });
+
     state.actions.hook.addEventListener(ACTION_COMPLETE_EVENT, (e: Event) => {
         const evt: ActionEventType = (e as CustomEvent);
         if (evt.detail.entityId === state.selectedEntity) {
             removeAction(evt.detail);
         }
+    });
+
+    state.entityHook.addEventListener(ENTITY_SELECTED_EVENT, (e: Event) => {
+        const custom = e as CustomEvent;
+        Array.from(document.querySelectorAll(`#interface_control > div:first-child > div`)).forEach(
+            (d) => (d as HTMLDivElement).classList.remove("active")
+        );
+        const eDiv = document.querySelector(`#interface_control > div:first-child > div[data-id="${custom.detail}"]`);
+        (eDiv as HTMLDivElement)?.classList.add("active");
     });
 };
 
@@ -67,7 +78,12 @@ const removeAction = (action: Action) => {
 };
 
 const bindButtons = (control: HTMLDivElement) => {
-    const [up, left, right] = Array.from(control.querySelectorAll("button"));
+    const [up, up5, left, right, mine, unload] = Array.from(control.querySelectorAll("button"));
+    up5.addEventListener("click", () => {
+        if (state.selectedEntity !== undefined) {
+            state.actions.addAction("MOVE", { value: 5, entityId: state.selectedEntity });
+        }
+    });
     up.addEventListener("click", () => {
         if (state.selectedEntity !== undefined) {
             state.actions.addAction("MOVE", { value: 1, entityId: state.selectedEntity });
@@ -83,4 +99,28 @@ const bindButtons = (control: HTMLDivElement) => {
             state.actions.addAction("ROTATE", { value: 1, entityId: state.selectedEntity });
         }
     });
+    mine.addEventListener("click", () => {
+        if (state.selectedEntity !== undefined) {
+            state.actions.addAction("MINE", { value: 0, entityId: state.selectedEntity });
+        }
+    });
+    unload.addEventListener("click", () => {
+        if (state.selectedEntity !== undefined) {
+            state.actions.addAction("UNLOAD", { value: 0, entityId: state.selectedEntity });
+        }
+    });
 }
+
+const listEntities = () => {
+    const container = document.querySelector("#interface_control > div:first-child") as HTMLDivElement ?? undefined;
+    if (!container) {
+        return;
+    }
+    state.entities.forEach((e) => {
+        const entityDiv = document.createElement("div");
+        entityDiv.dataset["id"] = e.id.toString();
+        entityDiv.textContent = `[${e.id}] ${e.type}`;
+        container.appendChild(entityDiv);
+        entityDiv.addEventListener("click", () => state.selectEntity(e.id));
+    });
+};

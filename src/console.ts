@@ -73,7 +73,7 @@ const selectEntity = (entityId: number) => {
     if (!state.entities.find((e) => e.id === entityId)) {
         return false;
     }
-    state.selectedEntity = entityId;
+    state.selectEntity(entityId)
     print(`Entity ${entityId} selected`);
     return true;
 }

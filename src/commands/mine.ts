@@ -12,7 +12,7 @@ export const command_Mine = function(this: Entity, action: Action) {
         action.timeEnd = Date.now() + MINE_TIME_MS
         action.start();
     }
-    if (action.timeEnd > Date.now()) {
+    if (action.timeEnd! > Date.now()) {
         return;
     }
     action.complete();
@@ -34,7 +34,12 @@ export const command_Mine = function(this: Entity, action: Action) {
             state.actions.addMapUpdate({ ...tile, type: TILE_TYPE.FLOOR, durability: 1 });
             for (let n of neighbours) {
                 if (n.type === TILE_TYPE.SHADOW) {
-                    state.actions.addMapUpdate({ ...n, type: TILE_TYPE.ROCK, durability: 1 });
+                    let type: number = TILE_TYPE.ROCK;
+                    if (Math.random() < 0.05) {
+                        // chance that new tile is ore is 5%
+                        type = TILE_TYPE.ORE;
+                    }
+                    state.actions.addMapUpdate({ ...n, type, durability: 1 });
                 }
             }
         } else {
