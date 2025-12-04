@@ -10,7 +10,7 @@ import { World } from './world';
 import { size, tileW } from './constants';
 import { initMap } from './map';
 import { Inventory, type Item } from './invent';
-import { onStorage, onStory, type WayPoint } from './story';
+import { onCraft, onStorage, onStory, type WayPoint } from './story';
 
 const loop = async (gl: WebGL2RenderingContext) => {
     initMap();
@@ -31,14 +31,15 @@ const loop = async (gl: WebGL2RenderingContext) => {
 
     const initialStory: WayPoint[] = [];
     const initialStorage: [Item, number][] = [
-/*        ["stone", 200],
+        ["stone", 200],
         ["iron", 200],
         ["carbon", 200],
-        ["copper", 200],*/
+        ["copper", 200],
     ];
 
     initialStorage.forEach(([i, c]) => state.inventory.add(i, c));
     initialStory.forEach((w) => state.addWaypoint(w));
+    onCraft("CONTROL_INTERFACE");
 
     let time = 0;
     csl.command_Welcome();

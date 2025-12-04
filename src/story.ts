@@ -1,7 +1,7 @@
 import { printImportant } from "./console";
-import { interface_Control } from "./interface/control";
 import type { Item } from "./invent";
 import { state } from "./state";
+import * as controlInterface from "./control.interface";
 
 export type WayPoint =
     "STORAGE_FIRST" |
@@ -128,29 +128,5 @@ see command "crafting" for more information`);
 };
 
 const addControllInterface = () => {
-    const nav = document.getElementById("nav");
-    const context = document.getElementById("context");
-
-    const link = document.createElement("div");
-    link.textContent = "Control";
-
-    const control = document.createElement("div");
-    control.id = "control_control";
-    control.classList.add("hidden");
-    control.innerHTML = interface_Control;
-    link.addEventListener("click", () => onNav(link, "control_control"));
-
-    nav?.appendChild(link);
-    context?.appendChild(control);
-};
-
-export const onNav = (link: HTMLDivElement, control: string) => {
-    Array.from(document.querySelectorAll('div#context > div')).forEach(
-        (div) => (div as HTMLDivElement).classList.add("hidden")
-    );
-    Array.from(document.querySelectorAll("#nav > div")).forEach(
-        (nav) => (nav as HTMLDivElement).classList.remove("active")
-    );
-    document.getElementById(control)?.classList.remove("hidden");
-    link.classList.add("active");
+    controlInterface.init();
 }

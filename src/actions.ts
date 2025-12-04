@@ -4,22 +4,31 @@ import type { Vec2D } from "./world";
 
 export type ActionType = "ROTATE" | "MOVE" | "MINE" | "UNLOAD";
 
+export const ACTION_ADD_EVENT = "ACTION_ADD";
+export const ACTION_COMPLETE_EVENT = "ACTION_REMOVE";
+
+export type ActionEventType = {
+    detail: Action;
+}
+
 export interface IAction {
     delta?: Vec2D;
     value?: number;
-    timeEnd: number;
+    timeEnd?: number;
     entityId: number;
 }
 
 export class Action implements IAction {
+    id: string;
     type: ActionType;
     delta?: Vec2D;
     value?: number;
-    timeEnd: number;
+    timeEnd?: number;
     entityId: number;
 
     isComplete?: boolean = false;
     isStarted?: boolean = false;
+
 
     constructor(type: ActionType, { delta, value, timeEnd, entityId }: IAction) {
         this.type = type;
@@ -27,6 +36,7 @@ export class Action implements IAction {
         this.value = value;
         this.timeEnd = timeEnd;
         this.entityId = entityId;
+        this.id = crypto.randomUUID();
 
         if (this.type === "ROTATE") {
             this.value = Math.max(Math.min(3, this.value ?? 0), -3);
@@ -47,18 +57,25 @@ export class Action implements IAction {
 export class Actions {
     stack: Action[];
     mapUpdates: Tile[];
+    hook: EventTarget;
 
     constructor() {
         this.stack = [];
         this.mapUpdates = [];
+        this.hook = new EventTarget();
     }
     getActions() {
+        const completed = this.stack.filter((a) => a.isComplete);
+        completed.forEach((a) => {
+            this.hook.dispatchEvent(new CustomEvent(ACTION_COMPLETE_EVENT, { detail: a }));
+        })
         this.stack = [...this.stack.filter((a) => !a.isComplete)];
         return this.stack;
     }
     addAction(type: ActionType, { delta, value, timeEnd, entityId }: IAction) {
         const a = new Action(type, { delta, value, timeEnd, entityId });
         this.stack.push(a);
+        this.hook.dispatchEvent(new CustomEvent(ACTION_ADD_EVENT, { detail: a }));
     }
     getMapUpdates() {
         const toReturn = [...this.mapUpdates];

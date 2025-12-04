@@ -1,0 +1,27 @@
+div#interface_control {
+    height: 300px;
+    & > div:first-child {
+        width: 25%;
+    }
+    & > div:nth-child(2) {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 50%;
+        border-left: solid 1px #ccc;
+        border-right: solid 1px #ccc;
+        & button {
+            padding: .5rem;
+        }
+
+    }
+    & > div:last-child {
+        display: flex;
+        flex-direction: column;
+        width: 25%;
+    }
+}
+
+div.gap {
+    gap: .5rem;
+}

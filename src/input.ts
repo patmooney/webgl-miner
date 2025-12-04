@@ -2,7 +2,6 @@ import { MIN_ZOOM, state } from "./state";
 import type { Vec2D } from "./world";
 import * as csl from "./console";
 import { HISTORY_MAX } from "./constants";
-import { onNav } from "./story";
 
 let dragStart: Vec2D | undefined;
 let canvas = document.getElementById("c");
@@ -66,3 +65,14 @@ export const initMouse = () => {
 
     document.querySelector("#nav > div:first-of-type")?.addEventListener("click", (e) => onNav(e.target as HTMLDivElement, "control_console"));
 };
+
+export const onNav = (link: HTMLDivElement, control: string) => {
+    Array.from(document.querySelectorAll('div#context > div')).forEach(
+        (div) => (div as HTMLDivElement).classList.add("hidden")
+    );
+    Array.from(document.querySelectorAll("#nav > div")).forEach(
+        (nav) => (nav as HTMLDivElement).classList.remove("active")
+    );
+    document.getElementById(control)?.classList.remove("hidden");
+    link.classList.add("active");
+}
