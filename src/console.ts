@@ -70,10 +70,11 @@ const selectEntity = (entityId: number) => {
     if (isNaN(entityId)) {
         return false;
     }
-    if (!state.entities.find((e) => e.id === entityId)) {
+    const entity = state.entities.find((e) => e.id === entityId);
+    if (!entity) {
         return false;
     }
-    state.selectEntity(entityId)
+    state.selectEntity(entityId);
     print(`Entity ${entityId} selected`);
     return true;
 }

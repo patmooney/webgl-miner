@@ -31,10 +31,10 @@ const loop = async (gl: WebGL2RenderingContext) => {
 
     const initialStory: WayPoint[] = [];
     const initialStorage: [Item, number][] = [
-        ["stone", 200],
+/*        ["stone", 200],
         ["iron", 200],
         ["carbon", 200],
-        ["copper", 200],
+        ["copper", 200],*/
     ];
 
     initialStorage.forEach(([i, c]) => state.inventory.add(i, c));

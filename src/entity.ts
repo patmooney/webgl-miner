@@ -20,6 +20,7 @@ type EntityBinds = {
     resolution: WebGLUniformLocation,
     rotation: WebGLUniformLocation,
     tileW: WebGLUniformLocation,
+    isSelected: WebGLUniformLocation
 };
 
 export type EntityType = "MINER";
@@ -85,7 +86,8 @@ export class Entity {
             atlas: gl.getAttribLocation(program, "a_texcoord"),
             camera: gl.getUniformLocation(program, "camera"),
             resolution: gl.getUniformLocation(program, "u_resolution"),
-            rotation: gl.getUniformLocation(program, "u_rotation")
+            rotation: gl.getUniformLocation(program, "u_rotation"),
+            isSelected: gl.getUniformLocation(program, "u_selected")
         };
 
         if (binds.camera === null || binds.position === null || binds.resolution === null || binds.move === null || binds.atlas === null) {
@@ -180,6 +182,7 @@ export class Entity {
         gl.uniform2fv(this.binds.move, this.coords);
         gl.uniform2fv(this.binds.rotation, this.rotation);
         gl.uniform1f(this.binds.tileW, tileW / 2);
+        gl.uniform1i(this.binds.isSelected, this.id === state.selectedEntity ? 2 : 0);
 
         // Pass in the canvas resolution so we can convert from
         // pixels to clipspace in the shader

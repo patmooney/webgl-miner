@@ -88,12 +88,14 @@ uniform vec2 camera;
 uniform vec2 u_movement;
 uniform vec2 u_rotation;
 uniform float tileW;
+uniform int u_selected;
 
 // Used to pass in the resolution of the canvas
 uniform vec2 u_resolution;
 
 out vec2 v_texcoord;
 out float b_type;
+out float is_selected;
 
 // all shaders have a main function
 void main() {
@@ -128,6 +130,7 @@ void main() {
   gl_Position = vec4(clipSpace, 0, 1);
 
   v_texcoord = a_texcoord;
+  is_selected = float(u_selected);
 }
 `;
 
@@ -137,6 +140,7 @@ precision highp float;
 
 // Passed in from the vertex shader.
 in vec2 v_texcoord;
+in float is_selected;
 
 // The texture.
 uniform sampler2D u_texture;
@@ -145,5 +149,12 @@ uniform sampler2D u_texture;
 out vec4 outColor;
 
 void main() {
-  outColor = texture(u_texture, v_texcoord);
+  vec4 color = texture(u_texture, v_texcoord);
+  outColor = vec4(
+    color.r,
+    color.g,
+    // make hidden pixels a transparent blue colour
+    color.b + ((1.0 - color.a) * (0.5 * is_selected)),
+    color.a + (0.25 * is_selected)
+  );
 }`;
