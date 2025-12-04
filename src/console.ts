@@ -44,13 +44,13 @@ const entityCommand = (cmd: string, value: string): boolean | undefined => {
         return undefined;
     }
 
-    const addAction = (action: ActionType) => {
+    const addAction = (actionType: ActionType) => {
         const intVal = parseInt(value ?? 0);
-        state.actions.addAction(action, { entityId: selected.id, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) });
-        if (action === "MOVE" || action === "ROTATE") {
+        const action = state.actions.addAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) });
+        if (actionType === "MOVE" || actionType === "ROTATE") {
             // OK the value for these is how many times to repeat
             for (let i = 1; i < intVal; i++) {
-                state.actions.addSilentAction(action, { entityId: selected.id, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) });
+                state.actions.addSilentAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: parseInt(value ?? 0) }, action.id);
             }
         }
         return true;
@@ -72,6 +72,8 @@ const metaCommand = (cmd: string, value: string): boolean | undefined => {
         case "storage": command_Storage(); return true;
         case "inventory": command_Inventory(); return true;
         case "battery": command_Battery(); return true;
+        case "cancel": command_Cancel(); return true;
+        case "halt": command_Halt(); return true;
         case "select": return selectEntity(parseInt(value));
         case "crafting": return command_Crafting(value);
         default: return undefined;
@@ -145,15 +147,17 @@ HELP
 =====
 
 - Manage -
-list       - List available entities
-storage    - Show current store inventory
+list       - List available entities.
+storage    - Show current store inventory.
 
 - Entity -
-select <n> - Select entity for control
-selected   - Show currently selected entitiy
-commands   - List available commands for selected entity
-inventory  - Show current entity inventory
-battery    - Show current entity battery value
+select <n> - Select entity for control.
+selected   - Show currently selected entitiy.
+commands   - List available commands for selected entity.
+inventory  - Show current entity inventory.
+battery    - Show current entity battery value.
+cancel     - Cancel current action where possible.
+halt       - Cancel all queued actions including current where possible.
 ${extra.join("\n")}
 `);
 };
@@ -211,6 +215,26 @@ export const command_Battery = () => {
         return printError(`No entity selected`);
     }
     print(`Entity [${selected.id}] battery: ${selected.battery} / 100`);
+};
+
+export const command_Cancel = () => {
+    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
+    if (!selected) {
+        return printError(`No entity selected`);
+    }
+    const action = state.actions.cancelOneForEntity(selected.id);
+    if (action) {
+        print(`Entity [${selected.id}] request to cancel ${action.type}`);
+    }
+};
+
+export const command_Halt = () => {
+    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
+    if (!selected) {
+        return printError(`No entity selected`);
+    }
+    state.actions.cancelAllForEntity(selected.id);
+    print(`Entity [${selected.id}] cancel all queued actions`);
 };
 
 export const command_Crafting = (recipe?: string) => {

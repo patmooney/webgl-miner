@@ -25,13 +25,15 @@ export class Action implements IAction {
     value?: number;
     timeEnd?: number;
     entityId: number;
+    parentId?: string;
     
-    isSilent?: boolean = false;
-    isComplete?: boolean = false;
-    isStarted?: boolean = false;
+    isSilent: boolean = false;
+    isComplete: boolean = false;
+    isStarted: boolean = false;
+    isCancelled: boolean = false;
+    shouldCancel: boolean = false;
 
-
-    constructor(type: ActionType, { delta, value, timeEnd, entityId }: IAction, isSilent = false) {
+    constructor(type: ActionType, { delta, value, timeEnd, entityId }: IAction, isSilent = false, parentId?: string) {
         this.type = type;
         this.delta = delta;
         this.value = value;
@@ -39,6 +41,7 @@ export class Action implements IAction {
         this.entityId = entityId;
         this.id = crypto.randomUUID();
         this.isSilent = isSilent;
+        this.parentId = parentId;
 
         if (this.type === "ROTATE") {
             this.value = Math.max(Math.min(3, this.value ?? 0), -3);
@@ -53,6 +56,13 @@ export class Action implements IAction {
     }
     start() {
         this.isStarted = true;
+    }
+    cancel() {
+        if (this.isStarted) {
+            this.shouldCancel = true;
+        } else {
+            this.isCancelled = true;
+        }
     }
 }
 
@@ -71,17 +81,34 @@ export class Actions {
         completed.forEach((a) => {
             this.hook.dispatchEvent(new CustomEvent(ACTION_COMPLETE_EVENT, { detail: a }));
         })
-        this.stack = [...this.stack.filter((a) => !a.isComplete)];
+        this.stack = [...this.stack.filter((a) => !a.isComplete && !a.isCancelled)];
         return this.stack;
     }
-    addAction(type: ActionType, { delta, value, timeEnd, entityId }: IAction) {
+    addAction(type: ActionType, { delta, value, timeEnd, entityId }: IAction): Action {
         const a = new Action(type, { delta, value, timeEnd, entityId });
         this.stack.push(a);
         this.hook.dispatchEvent(new CustomEvent(ACTION_ADD_EVENT, { detail: a }));
+        return a;
     }
-    addSilentAction(type: ActionType, { delta, value, timeEnd, entityId }: IAction) {
-        const a = new Action(type, { delta, value, timeEnd, entityId }, true);
+    addSilentAction(type: ActionType, { delta, value, timeEnd, entityId }: IAction, parentId?: string) {
+        const a = new Action(type, { delta, value, timeEnd, entityId }, true, parentId);
         this.stack.push(a);
+    }
+    cancelOneForEntity(entityId: number): Action | undefined {
+        const action = this.stack.find((a) => a.entityId === entityId);
+        if (!action) {
+            return;
+        }
+        const children = this.stack.filter((a) => a.parentId === action.id);
+        [action, ...children].forEach(
+            (a) => a.cancel()
+        );
+        return action;
+    }
+    cancelAllForEntity(entityId: number) {
+        this.stack.filter((a) => a.entityId === entityId).forEach(
+            (a) => a.cancel()
+        );
     }
     getMapUpdates() {
         const toReturn = [...this.mapUpdates];

@@ -9,7 +9,7 @@ import { tileW, size, ANGLE_TO_RAD, SATW, type Angle } from './constants';
 import { runAction } from './commands/index.js';
 import { state } from './state.js';
 import { Inventory } from './invent.js';
-import { printError } from './console.js';
+import { printError, printWarning } from './console.js';
 
 // BLOCK TYPES
 type Vec2D = [number, number];
@@ -72,7 +72,7 @@ export class Entity {
         this.actions = actions;
         this.type = type;
         this.inventory = new Inventory(undefined, inventorySize);
-        this.battery = 100;
+        this.battery = 11;
         this.maxBattery = 100;
     }
 
@@ -160,13 +160,18 @@ export class Entity {
     }
 
     update(action?: Action) {
+        const prevBat = this.battery;
         if (action) {
             runAction.call(this, action);
         }
-        if (this.battery <= 0) {
-            printError(`Entity ${this.id} has no battery`);
-        } else if (this.battery <= 10) {
-            printError(`Entity ${this.id} is low on battery`);
+        if (this.battery !== prevBat) {
+            if (this.battery <= 0) {
+                printError(`Entity ${this.id} - no power, battery empty`);
+            } else if (this.battery <= (this.maxBattery * 0.2) && prevBat > (this.maxBattery * 0.2)) {
+                printWarning(`Entity ${this.id} - battery low warning`);
+            } else if (this.battery <= (this.maxBattery * 0.1) && prevBat > (this.maxBattery * 0.1)) {
+                printError(`Entity ${this.id} - battery is critical`);
+            }
         }
     }
 

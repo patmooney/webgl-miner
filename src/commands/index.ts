@@ -38,10 +38,10 @@ export const runAction = function(this: Entity, action: Action) {
 
     if (!action.isStarted) {
         if (command.BATTERY_COST) {
-            this.battery = Math.max(0, this.battery - command.BATTERY_COST);
-            if (!this.battery) {
+            if (this.battery < command.BATTERY_COST) {
                 return;
             }
+            this.battery = Math.max(0, this.battery - command.BATTERY_COST);
         }
         printAction(this, action);
     }
