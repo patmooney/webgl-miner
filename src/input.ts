@@ -15,6 +15,7 @@ export const initMouse = () => {
     });
     canvas?.addEventListener("mousemove", (e: Event) => {
         if (dragStart) {
+            state.isFollowing = undefined;
             let coords = [(e as MouseEvent).clientX, (e as MouseEvent).clientY];
             const zoom = state.zoom + (0 - MIN_ZOOM)
             const ratio = 0.6 + (zoom * 0.125);

@@ -16,6 +16,7 @@ class State {
     zoom: number = 0;
     selectedEntity: number | undefined;
     inventory: Inventory;
+    isFollowing?: number;
     entities: Entity[] = [];
     story: { [key in WayPoint]?: boolean } = {};
     history: string[] = [];
@@ -30,10 +31,20 @@ class State {
         this.entityHook = new EventTarget();
     }
     selectEntity(id: number) {
-        if (this.entities.find((e) => e.id === id)) {
+        if (this.focusEntity(id)) {
             this.selectedEntity = id;
             this.entityHook.dispatchEvent(new CustomEvent(ENTITY_SELECTED_EVENT, { detail: id }));
         }
+    }
+    focusEntity(id: number): boolean {
+        const entity = this.entities.find((e) => e.id === id);
+        if (entity) {
+            this.isFollowing = id;
+            this.camera = [entity.coords[0] - (8.5 * tileW), entity.coords[1]  - (6.5 * tileW)];
+            this.zoom = 0;
+            return true;
+        }
+        return false;
     }
     resolution(gl: WebGL2RenderingContext): [number, number] {
         const ratio = gl.canvas.height / gl.canvas.width;

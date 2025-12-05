@@ -3,8 +3,10 @@ import { tileW, CARDINAL_MAP, type Vec2D, type Angle } from "../constants";
 import type { Action } from "../actions";
 import { coordToTile, getTileAt, TILE_NAVIGATE } from "../map";
 import { clamp } from "../utils/maths";
+import { state } from "../state";
 
 export const BATTERY_COST = 1;
+const baseSpeed = tileW / 100;
 
 export const command = function(this: Entity, action: Action) {
     if (!action.isStarted) {
@@ -25,11 +27,13 @@ export const command = function(this: Entity, action: Action) {
         action?.start();
     }
 
+    const moveSpeed = this.speed * baseSpeed;
+
     let delta: Vec2D | undefined;
     if (this.target) {
         delta = [
-            clamp(-this.moveSpeed, this.moveSpeed, this.target[0] - this.coords[0]),
-            clamp(-this.moveSpeed, this.moveSpeed, this.target[1] - this.coords[1]),
+            clamp(-moveSpeed, moveSpeed, this.target[0] - this.coords[0]),
+            clamp(-moveSpeed, moveSpeed, this.target[1] - this.coords[1]),
         ];
     }
 
@@ -40,7 +44,12 @@ export const command = function(this: Entity, action: Action) {
     }
 
     if (delta) {
+        if (state.isFollowing === this.id) {
+            state.camera[0] += delta[0];
+            state.camera[1] += delta[1];
+        }
         this.coords = [this.coords[0] + delta[0], this.coords[1] + delta[1]];
+        console.log({ c: state.camera, e: this.coords });
     }
 }
 

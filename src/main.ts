@@ -22,12 +22,11 @@ const loop = async (gl: WebGL2RenderingContext) => {
         new Entity(
             state.entities.length, "MINER",
             ["ROTATE", "MOVE", "MINE", "UNLOAD", "RECHARGE"],
-            10,
-            ["module_basic_drill", "module_basic_battery", "module_basic_motor"]
+            ["module_dev"]
         )
     );
 
-    state.camera = [((size/2) - 9) * tileW, ((size/2) - 6) * tileW];
+    state.camera = [((size/2) - 9) * tileW, ((size/2) - 7) * tileW];
 
     initMouse();
 

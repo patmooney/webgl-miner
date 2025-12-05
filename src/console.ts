@@ -48,7 +48,7 @@ const entityCommand = (cmd: string, value: string): boolean | undefined => {
         const action = state.actions.addAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal });
         if (actionType === "MOVE" || actionType === "ROTATE" || actionType === "MINE") {
             // OK the value for these is how many times to repeat
-            for (let i = 1; i < intVal; i++) {
+            for (let i = 1; i < (action.value ?? intVal); i++) {
                 state.actions.addSilentAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal }, action.id);
             }
         }
@@ -76,6 +76,7 @@ const metaCommand = (cmd: string, value: string): boolean | undefined => {
         case "select": return selectEntity(parseInt(value));
         case "crafting": return command_Crafting(value);
         case "modules": command_Modules(); return true;
+        case "focus": command_Focus(); return true;
         default: return undefined;
     };
 };
@@ -159,6 +160,7 @@ battery    - Show current entity battery value.
 cancel     - Cancel current action where possible.
 halt       - Cancel all queued actions including current where possible.
 modules    - List currently installed modules and stats.
+focus      - Move camera and follow selected entity.
 ${extra.join("\n")}
 `);
 };
@@ -194,6 +196,14 @@ STORAGE
 ${Object.entries(state.inventory.inventory).map(([k, v]) => `${ItemLabels[k as Item]} - ${v}`).join("\n")}
 `);
 };
+
+export const command_Focus = () => {
+    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
+    if (!selected) {
+        return printError(`No entity selected`);
+    }
+    state.focusEntity(selected.id);
+}
 
 export const command_Inventory = () => {
     const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;

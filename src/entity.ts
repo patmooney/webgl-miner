@@ -31,6 +31,7 @@ export interface IEntityStats {
     drillSpeed: number;
     battery: number;
     speed: number;
+    inventorySize: number;
 }
 
 export class Entity implements IEntityStats {
@@ -42,6 +43,7 @@ export class Entity implements IEntityStats {
     rotation: Vec2D = [0, 1];
     rad: number = ANGLE_TO_RAD[3];
     angle: Angle = 3;
+    inventorySize: number;
     inventory: Inventory;
 
     speed: number;
@@ -53,7 +55,6 @@ export class Entity implements IEntityStats {
     targetR: Angle | undefined;
 
     coords: Vec2D;
-    moveSpeed: number = tileW / 100;
 
     indices: Uint16Array;
     positions: Float32Array;
@@ -67,7 +68,7 @@ export class Entity implements IEntityStats {
 
     atlas: WebGLTexture | undefined;
 
-    constructor(id: number, type: EntityType, actions: ActionType[] = ["MOVE", "ROTATE"], inventorySize: number = 10, modules?: Item[]) {
+    constructor(id: number, type: EntityType, actions: ActionType[] = ["MOVE", "ROTATE"], modules?: Item[]) {
         this.id = id;
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
@@ -81,12 +82,13 @@ export class Entity implements IEntityStats {
         this.rotation[1] = Math.cos(this.rad);
         this.actions = actions;
         this.type = type;
-        this.inventory = new Inventory(undefined, inventorySize);
 
         this.maxBattery = 0;
         this.battery = this.maxBattery;
         this.speed = 0;
         this.drillSpeed = 0;
+        this.inventorySize = 0;
+        this.inventory = new Inventory(undefined, this.inventorySize);
         this.modules = modules ?? [];
     }
 
@@ -114,12 +116,15 @@ export class Entity implements IEntityStats {
         this.speed = 0;
         this.drillSpeed = 0;
         this.maxBattery = 0;
+        this.inventorySize = 0;
         this.modules.forEach((m) => {
             const stats = ModuleStats[m]?.stats;
             this.speed += stats?.speed ?? 0;
             this.maxBattery += stats?.battery ?? 0;
             this.drillSpeed += stats?.drillSpeed ?? 0;
+            this.inventorySize += stats?.inventorySize ?? 0;
         });
+        this.inventory.limit = this.inventorySize;
     }
 
     async initGraphics(gl: WebGL2RenderingContext) {

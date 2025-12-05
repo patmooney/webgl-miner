@@ -30,15 +30,16 @@ export const TILE_TYPE = {
 } as const satisfies Record<TILE, number>;
 
 export type Drop = {
-    item: Item,
-    chance: number
+    item: Item;
+    chance?: number;
+    baseChance?: number;
 };
 
 export const TILE_DROP: { [key in TILE]?: Drop[] } = {
     // OK so drop chance should be multiplied depending on depth
     // ORE rocks should ofc have slightly higher chances + rare ore chance
-    ROCK: [{ item: "stone", chance: 1 }, { item: "iron", chance: 0.02 }],
-    ORE: [{ item: "stone", chance: 0.01 }, { item: "iron", chance: 0.05 }, { item: "copper", chance: 0.02 }, { item: "carbon", chance: 0.01 }]
+    ROCK: [{ item: "stone", chance: 0.5 }, { item: "iron", baseChance: 0.02 }],
+    ORE: [{ item: "stone", chance: 0.01 }, { item: "iron", baseChance: 0.05 }, { item: "copper", baseChance: 0.02 }, { item: "carbon", baseChance: 0.01 }]
 } as const satisfies { [key in TILE]?: Drop[] };
 
 export const getTileType = (tile: number): TILE => {
@@ -127,6 +128,11 @@ export const getNeighbours = (coord: Vec2D): Tile[] => {
     }
 
     return neighbours;
+}
+
+export const distanceFromCenter = (tile: Tile) => {
+    const center = size / 2;
+    return Math.round(Math.sqrt(Math.pow(tile.coord[0] - center, 2) + Math.pow(tile.coord[1] - center, 2)));
 }
 
 let _map: Float32Array | undefined;

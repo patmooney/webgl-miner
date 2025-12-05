@@ -1,7 +1,7 @@
 import type { Entity } from "../entity";
 import type { Vec2D, Angle } from "../constants";
 import type { Action } from "../actions";
-import { coordToTile, getNeighbours, getTileAt, TILE_DROP, TILE_DURABILITY, TILE_TYPE, type Tile } from "../map";
+import { coordToTile, distanceFromCenter, getNeighbours, getTileAt, TILE_DROP, TILE_DURABILITY, TILE_TYPE, type Tile } from "../map";
 import { state } from "../state";
 
 export const BATTERY_COST = 2;
@@ -10,7 +10,7 @@ const MINE_TIME_MS = 2000;
 
 export const command = function(this: Entity, action: Action) {
     if (!action.isStarted) {
-        action.timeEnd = Date.now() + MINE_TIME_MS
+        action.timeEnd = Date.now() + (MINE_TIME_MS / this.drillSpeed);
         action.start();
     }
     if (action.timeEnd! > Date.now()) {
@@ -22,11 +22,18 @@ export const command = function(this: Entity, action: Action) {
 
         let durability = tile.durability * TILE_DURABILITY[tile.tile];
         durability -= DAMAGE;
+        const dist = distanceFromCenter(tile);
 
         const drops = TILE_DROP[tile.tile as keyof typeof TILE_DROP] ?? [];
         for (let drop of drops) {
-            if (Math.random() <= drop.chance) {
-                this.inventory.add(drop.item)
+            let chance = drop.chance
+                ? drop.chance
+                : (drop.baseChance ?? 0) * (dist * 0.2);
+            while(chance > 0) {
+                if (Math.random() <= chance) {
+                    this.inventory.add(drop.item);
+                }
+                chance -= 1;
             }
         }
 
@@ -36,7 +43,7 @@ export const command = function(this: Entity, action: Action) {
             for (let n of neighbours) {
                 if (n.type === TILE_TYPE.SHADOW) {
                     let type: number = TILE_TYPE.ROCK;
-                    if (Math.random() < 0.05) {
+                    if (Math.random() < (0.01 * dist)) {
                         // chance that new tile is ore is 5%
                         type = TILE_TYPE.ORE;
                     }

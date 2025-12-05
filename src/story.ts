@@ -13,12 +13,14 @@ export type WayPoint =
     "INTERFACE_SMELTING";
 
 export type RecipeName = "VISUAL_SCAN_MODULE" | "AUTOMATION_INTERFACE" | "CONTROL_INTERFACE" |
-    "BASIC_DRILL_MODULE" | "BASIC_MOTOR_MODULE" | "BASIC_BATTERY_MODULE" | "MINING_AUTOMATION_HULL" | "HOME_NAVIGATION_MODULE" | "SMELTING_INTERFACE";
+    "BASIC_DRILL_MODULE" | "BASIC_MOTOR_MODULE" | "BASIC_BATTERY_MODULE" | "MINING_AUTOMATION_HULL" | "HOME_NAVIGATION_MODULE" | "SMELTING_INTERFACE"
 export type CraftType = "INTERFACE" | "MODULE" | "DEPLOYABLE";
 
-export type Item = "stone" | "iron" | "carbon" | "copper" | "coal"| "module_visual_scanner" | "module_basic_drill" | "module_basic_battery" | "module_basic_motor" | "deployable_mining_hull" | "module_home_navigation";
+export type Item = "stone" | "iron" | "carbon" | "copper" | "coal"| "module_visual_scanner" | "module_basic_drill" | "module_basic_battery" | "module_basic_motor" | "deployable_mining_hull" | "module_home_navigation" | "module_basic_store" |
+    // DEV MODULES
+    "module_dev";
 
-export type ModuleType = "engine" | "battery" | "drill" | "navigation";
+export type ModuleType = "engine" | "battery" | "drill" | "navigation" | "store";
 
 export const ModuleStats: { [key in Item]?: { type: ModuleType, stats: Partial<IEntityStats> } } =  {
     module_basic_battery: {
@@ -36,7 +38,23 @@ export const ModuleStats: { [key in Item]?: { type: ModuleType, stats: Partial<I
     module_basic_motor: {
         type: "engine",
         stats: {
-            speed: 0.05
+            speed: 1
+        }
+    },
+    module_basic_store: {
+        type: "store",
+        stats: {
+            inventorySize: 10
+        }
+    },
+    // DEV
+    module_dev: {
+        type: "battery",
+        stats: {
+            battery: 10_000,
+            drillSpeed: 20,
+            speed: 10,
+            inventorySize: 1000
         }
     }
 }
@@ -50,9 +68,11 @@ export const ItemLabels: Record<Item, string> = {
     module_basic_battery: "Basic Battery",
     module_basic_drill: "Basic Drill",
     module_basic_motor: "Basic Motor",
+    module_basic_store: "Basic Store",
     deployable_mining_hull: "Mining Automation Hull",
     module_home_navigation: "Home Navigation Module",
-    coal: "Coal"
+    coal: "Coal",
+    module_dev: "DEV DEV DEV"
 } as const satisfies Record<Item, string>;
 
 export type RecipeBase = {
