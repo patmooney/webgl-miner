@@ -26,9 +26,12 @@ class State {
     history: string[] = [];
     onStory?: (waypoint: WayPoint) => void;
 
+    lights: Float32Array;
+
     entityHook: EventTarget;
 
     constructor(actions = new Actions(), inventory = new Inventory(), onStory?: (waypoint: WayPoint) => void) {
+        this.lights = new Float32Array(16 * 3).fill(0);
         this.actions = actions;
         this.inventory = inventory;
         this.onStory = onStory;
@@ -78,6 +81,16 @@ class State {
             this.story[waypoint] = true;
             this.onStory?.(waypoint);
         }
+    }
+    updateLights() {
+        const lights = new Float32Array(16 * 3).fill(0);
+        for (let idx = 0; idx < state.entities.length; idx++) {
+            const [x, y] = state.entities[idx].coords;
+            lights[idx*3] = x;
+            lights[(idx*3)+1] = y;
+            lights[(idx*3)+2] = 5 * tileW;
+        }
+        this.lights = lights;
     }
 }
 

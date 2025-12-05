@@ -50,6 +50,7 @@ const loop = async (gl: WebGL2RenderingContext) => {
 
     let time = 0;
     csl.command_Welcome();
+    state.updateLights();
 
     while(true) {
         await new Promise<void>((finishRender) => requestAnimationFrame(() => {

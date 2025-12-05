@@ -27,7 +27,7 @@ export const command = function(this: Entity, action: Action) {
         action?.start();
     }
 
-    const moveSpeed = this.speed * baseSpeed;
+    const moveSpeed = baseSpeed;//this.speed * baseSpeed;
 
     let delta: Vec2D | undefined;
     if (this.target) {
@@ -38,6 +38,7 @@ export const command = function(this: Entity, action: Action) {
     }
 
     if (delta?.[0] === 0 && delta?.[1] === 0) {
+        state.updateLights();
         action?.complete();
         this.target = undefined;
         delta = undefined;

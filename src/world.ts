@@ -21,6 +21,8 @@ type WorldBinds = {
     light: WebGLUniformLocation,
 };
 
+const TEXTURE_BUFFER = 0.01;
+
 export class World {
     private indices: Uint16Array;
     private positions: Float32Array;
@@ -37,10 +39,10 @@ export class World {
     constructor() {
         this.indices = new Uint16Array([0, 1, 2, 2, 3, 1]);
         this.positions = new Float32Array([
-            0, 0, 0, 1,
-            0, tileW, 0, 0,
-            tileW, 0, SATW, 1,
-            tileW, tileW, SATW, 0
+            0, 0, TEXTURE_BUFFER, 1 - TEXTURE_BUFFER,
+            0, tileW, TEXTURE_BUFFER, TEXTURE_BUFFER,
+            tileW, 0, SATW - TEXTURE_BUFFER, 1 - TEXTURE_BUFFER,
+            tileW, tileW, SATW - TEXTURE_BUFFER, TEXTURE_BUFFER
         ]);
     }
 
@@ -181,14 +183,7 @@ export class World {
         gl.uniform1i(gl.getUniformLocation(this.program, "u_texture"), 1);
         gl.uniform1f(this.binds.atlasW, SATW);
 
-        let lights = new Float32Array(16 * 3).fill(0);
-        for (let idx = 0; idx < state.entities.length; idx++) {
-            const [x, y] = state.entities[idx].coords;
-            lights[idx*3] = x;
-            lights[(idx*3)+1] = y;
-            lights[(idx*3)+2] = 5 * tileW;
-        }
-        gl.uniform3fv(this.binds.light, lights);
+        gl.uniform3fv(this.binds.light, state.lights);
 
         gl.uniform2fv(this.binds.camera, [-camera[0], -camera[1]]);
 
