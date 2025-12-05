@@ -49,7 +49,6 @@ export const command = function(this: Entity, action: Action) {
             state.camera[1] += delta[1];
         }
         this.coords = [this.coords[0] + delta[0], this.coords[1] + delta[1]];
-        console.log({ c: state.camera, e: this.coords });
     }
 }
 
