@@ -14,25 +14,43 @@ uniform vec2 camera;
 // Used to pass in the resolution of the canvas
 uniform vec2 u_resolution;
 
+uniform vec3 u_light[16];
+
 uniform highp sampler2D u_data;
 
 out vec2 v_texcoord;
+out float bright;
 out float b_type;
 out float durability;
 out float atlas_w;
 
 // all shaders have a main function
 void main() {
-
-  int row = int(floor(float(gl_InstanceID / tileX)));
-  int col = int(mod(float(gl_InstanceID), float(tileX)));
+  float rRow = floor(float(gl_InstanceID / tileX));
+  float rCol = mod(float(gl_InstanceID), float(tileX));
+  int row = int(rRow);
+  int col = int(rCol);
 
   float xOffset = float(col * (tileW));
   float yOffset = float(row * (tileW));
 
   vec2 instPos = vec2(a_position);
-  instPos.x += xOffset + camera.x;
-  instPos.y += yOffset + camera.y;
+  instPos.x += xOffset;
+  instPos.y += yOffset;
+
+  bright = 0.1;
+  for (int i = 0; i < 16; i++) {
+    if (u_light[i].z > 0.0) {
+      vec2 l = u_light[i].xy + vec2(tileW, tileW);
+      float d = distance(l.xy, instPos);
+      if (d < u_light[i].z) {
+        bright += 1.0 - (d / u_light[i].z);
+      }
+    }
+  }
+
+  instPos.x += camera.x;
+  instPos.y += camera.y;
 
   // convert the position from pixels to 0.0 to 1.0
   vec2 zeroToOne = instPos / u_resolution;
@@ -64,6 +82,7 @@ in vec2 v_texcoord;
 in float b_type;
 in float durability;
 in float atlas_w;
+in float bright;
 
 // The texture.
 uniform sampler2D u_texture;
@@ -74,6 +93,7 @@ out vec4 outColor;
 void main() {
   vec2 tcoord = vec2(v_texcoord.x + (atlas_w * b_type), v_texcoord.y);
   outColor = texture(u_texture, tcoord) * vec4(1.0, durability, durability, 1.0);
+  outColor = outColor * vec4(bright, bright, bright, 1.0);
 }`;
 
 export const entityVertexSource = `#version 300 es

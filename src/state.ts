@@ -1,6 +1,7 @@
 import { Actions } from "./actions";
 import { HISTORY_MAX, tileW } from "./constants";
 import type { Entity } from "./entity";
+import type { EntityGraphics } from "./graphics/entity";
 import { Inventory } from "./invent";
 import type { WayPoint } from "./story";
 import { clamp } from "./utils/maths";
@@ -11,6 +12,9 @@ export const MIN_ZOOM = -3;
 export const ENTITY_SELECTED_EVENT = "ENTITY_SELECTED";
 
 class State {
+    gl?: WebGL2RenderingContext;
+    entityGfx?: EntityGraphics;
+
     camera: Vec2D = [0, 0];
     actions: Actions;
     zoom: number = 0;

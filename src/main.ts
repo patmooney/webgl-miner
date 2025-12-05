@@ -11,15 +11,22 @@ import { size, tileW } from './constants';
 import { initMap } from './map';
 import { Inventory } from './invent';
 import { onStorage, onStory, type WayPoint, type Item } from './story';
+import { EntityGraphics } from './graphics/entity';
 
 const loop = async (gl: WebGL2RenderingContext) => {
     initMap();
     const w = new World();
     state.inventory = new Inventory(onStorage);
     state.onStory = onStory;
+    state.gl = gl;
+
+    const entityGraphics = new EntityGraphics();
+    await entityGraphics.initGraphics(gl);
+    state.entityGfx = entityGraphics;
 
     state.entities.push(
         new Entity(
+            entityGraphics,
             state.entities.length, "MINER",
             ["ROTATE", "MOVE", "MINE", "UNLOAD", "RECHARGE"],
             ["module_dev"]
@@ -31,7 +38,7 @@ const loop = async (gl: WebGL2RenderingContext) => {
     initMouse();
 
     for (let e of state.entities) {
-        await e.init(gl);
+        await e.init();
     }
     await w.init(gl);
 
@@ -60,14 +67,14 @@ const loop = async (gl: WebGL2RenderingContext) => {
             gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
             // Clear the canvas
-            gl.clearColor(0.2, 0.2, 0.2, 1);
+            gl.clearColor(0.1, 0.1, 0.1, 1);
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
             w.render(gl, state.camera);
             for (let e of state.entities) {
-                e.render(gl, state.camera);
+               e.render(gl, state.camera);
             }
             finishRender();
         }));

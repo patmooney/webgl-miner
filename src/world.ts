@@ -18,6 +18,7 @@ type WorldBinds = {
     camera: WebGLUniformLocation,
     resolution: WebGLUniformLocation,
     atlasW: WebGLUniformLocation,
+    light: WebGLUniformLocation,
 };
 
 export class World {
@@ -59,7 +60,8 @@ export class World {
             tileX: gl.getUniformLocation(program, "tileX"),
             camera: gl.getUniformLocation(program, "camera"),
             resolution: gl.getUniformLocation(program, "u_resolution"),
-            atlasW: gl.getUniformLocation(program, "u_atlas_w")
+            atlasW: gl.getUniformLocation(program, "u_atlas_w"),
+            light: gl.getUniformLocation(program, "u_light")
         };
 
         if (binds.camera === null || binds.position === null || binds.resolution === null || binds.tileW === null || binds.tileX === null || binds.atlas === null) {
@@ -178,6 +180,15 @@ export class World {
         gl.uniform1i(gl.getUniformLocation(this.program, "u_data"), 0);
         gl.uniform1i(gl.getUniformLocation(this.program, "u_texture"), 1);
         gl.uniform1f(this.binds.atlasW, SATW);
+
+        let lights = new Float32Array(16 * 3).fill(0);
+        for (let idx = 0; idx < state.entities.length; idx++) {
+            const [x, y] = state.entities[idx].coords;
+            lights[idx*3] = x;
+            lights[(idx*3)+1] = y;
+            lights[(idx*3)+2] = 5 * tileW;
+        }
+        gl.uniform3fv(this.binds.light, lights);
 
         gl.uniform2fv(this.binds.camera, [-camera[0], -camera[1]]);
 

@@ -135,7 +135,12 @@ export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement, multiplier?
     return false;
 }
 
+let texMap: Record<string, WebGLTexture> = {};
+
 export const loadTexture = async (gl: WebGL2RenderingContext, img: string): Promise<WebGLTexture> => {
+    if (texMap[img]) {
+        return texMap[img];
+    }
     const tex = gl.createTexture() ?? undefined;
     if (!tex) {
         throw new Error("Invalid texture");
@@ -152,6 +157,7 @@ export const loadTexture = async (gl: WebGL2RenderingContext, img: string): Prom
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.bindTexture(gl.TEXTURE_2D, null);
+            texMap[img] = tex;
             resolve(tex);
         };
     });

@@ -1,5 +1,5 @@
 import type { Action, ActionType } from "./actions";
-import type { Entity } from "./entity";
+import { Entity } from "./entity";
 import { state } from "./state";
 import { onCraft, Recipes, type RecipeInterface, type RecipeName, type Item, ItemLabels } from "./story";
 
@@ -77,6 +77,7 @@ const metaCommand = (cmd: string, value: string): boolean | undefined => {
         case "crafting": return command_Crafting(value);
         case "modules": command_Modules(); return true;
         case "focus": command_Focus(); return true;
+        case "dev_spawn": command_DEV_SPAWN(); return true;
         default: return undefined;
     };
 };
@@ -262,6 +263,20 @@ export const command_Halt = () => {
     }
     state.actions.cancelAllForEntity(selected.id);
     print(`Entity [${selected.id}] cancel all queued actions`);
+};
+
+export const command_DEV_SPAWN = () => {
+    if (!state.gl || !state.entityGfx) {
+        return;
+    }
+    const e =  new Entity(
+        state.entityGfx,
+        state.entities.length, "MINER",
+        ["ROTATE", "MOVE", "MINE", "UNLOAD", "RECHARGE"],
+        ["module_dev"]
+    );
+    e.init();
+    state.entities.push(e);
 };
 
 export const command_Crafting = (recipe?: string) => {
