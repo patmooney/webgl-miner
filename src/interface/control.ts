@@ -15,11 +15,12 @@ export const interface_Control = `
                     <button>&#9655;</button>
                 </div>
             </div>
-            <div class="flex-row gap justified border">
+            <div class="flex-row gap justify-center border items-center flex-wrap">
                 <button>Mine</button>
                 <button>Mine x 5</button>
                 <button>Unload</button>
                 <button>Recharge</button>
+                <button>Focus</button>
             </div>
         </div>
     </div>

@@ -163,6 +163,14 @@ div.border {
     margin: .2rem;
 }
 
+div.justify-center {
+    justify-content: center;
+}
+
 div.items-center {
     align-items: center;
+}
+
+div.flex-wrap {
+    flex-wrap: wrap;
 }

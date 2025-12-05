@@ -80,7 +80,7 @@ const removeAction = (action: Action) => {
 };
 
 const bindButtons = (control: HTMLDivElement) => {
-    const [up, up5, left, right, mine, mine5, unload, recharge] = Array.from(control.querySelectorAll("button"));
+    const [up, up5, left, right, mine, mine5, unload, recharge, focus] = Array.from(control.querySelectorAll("button"));
     up5.addEventListener("click", () => {
         if (state.selectedEntity !== undefined) {
             state.actions.addAction("MOVE", { value: 5, entityId: state.selectedEntity });
@@ -125,6 +125,11 @@ const bindButtons = (control: HTMLDivElement) => {
     recharge.addEventListener("click", () => {
         if (state.selectedEntity !== undefined) {
             state.actions.addAction("RECHARGE", { value: 100, entityId: state.selectedEntity });
+        }
+    });
+    focus.addEventListener("click", () => {   
+        if (state.selectedEntity !== undefined) {
+            state.focusEntity(state.selectedEntity);
         }
     });
 }
