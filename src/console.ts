@@ -1,6 +1,7 @@
 import type { Action, ActionType } from "./actions";
 import { CONSOLE_LINES } from "./constants";
 import { Entity } from "./entity";
+import { Script } from "./script";
 import { state } from "./state";
 import { onCraft, Recipes, type RecipeInterface, type RecipeName, type Item, ItemLabels } from "./story";
 
@@ -79,6 +80,7 @@ const metaCommand = (cmd: string, value: string): boolean | undefined => {
         case "modules": command_Modules(); return true;
         case "focus": command_Focus(); return true;
         case "dev_spawn": command_DEV_SPAWN(); return true;
+        case "exec": return command_Exec(value);
         default: return undefined;
     };
 };
@@ -169,6 +171,7 @@ cancel     - Cancel current action where possible.
 halt       - Cancel all queued actions including current where possible.
 modules    - List currently installed modules and stats.
 focus      - Move camera and follow selected entity.
+exec <s>   - Execute a named script.
 ${extra.join("\n")}
 `);
 };
@@ -315,6 +318,19 @@ ${recipes?.length ? "- Recipes -\n\n" + recipes.join("\n\n") : " - No recipes av
 
     return true;
 };
+
+export const command_Exec = (raw: string) => {
+    raw = `
+    # COMMENT
+    START:
+    JEQ M_1 5 START
+    JEQ sausage bacon STARTY
+    `;
+    const script = new Script(raw);
+
+    console.log(script);
+    return true;
+}
 
 const commandHelp: Record<ActionType, string> = {
     "MINE":     "mine <n=1>      - Activate drill <n> times.",
