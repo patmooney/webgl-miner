@@ -5,6 +5,7 @@ export const ATLAS_IMAGE_NUM = 6; // number of textures in our atlas
 export const SATW = 1 / ATLAS_IMAGE_NUM;
 export const TILE_STORE_SIZE = 2;
 export const HISTORY_MAX = 10;
+export const CONSOLE_LINES = 200;
 
 export type Vec2D = [number, number];
 

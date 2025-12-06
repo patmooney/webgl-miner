@@ -1,4 +1,5 @@
 import type { Action, ActionType } from "./actions";
+import { CONSOLE_LINES } from "./constants";
 import { Entity } from "./entity";
 import { state } from "./state";
 import { onCraft, Recipes, type RecipeInterface, type RecipeName, type Item, ItemLabels } from "./story";
@@ -107,16 +108,22 @@ export const printEntity = (id: number, msg: string) => {
 }
 
 export const print = (str: string, className?: string) => {
-    str.split("\n").map(
+    const lines = str.split("\n").map(
         (line) => {
             const p = document.createElement("p");
             p.textContent = line || "";
             if (className) {
                 p.className = className;
             }
-            output?.appendChild(p);
+            return p;
         }
     );
+    const existing = Array.from(output?.children ?? []);
+    const toRemove = (existing.length + lines.length) - CONSOLE_LINES;
+    for (let idx = 0; idx < Math.max(toRemove, 0); idx++) {
+        existing[idx]?.remove();
+    }
+    lines.forEach((line) => output?.appendChild(line));
     output?.scrollTo(0, output.scrollHeight ?? 0);
 };
 
@@ -185,7 +192,7 @@ print(`
 COMMANDS
 =========
 
-${selected.actions.map((act) => ` - ${act.toLowerCase()}`).join("\n")}
+${selected.actions.map((act) => ` - ${commandHelp[act]}`).join("\n")}
 `);
 }
 
@@ -307,4 +314,12 @@ ${recipes?.length ? "- Recipes -\n\n" + recipes.join("\n\n") : " - No recipes av
 `);
 
     return true;
+};
+
+const commandHelp: Record<ActionType, string> = {
+    "MINE":     "mine <n=1>      - Activate drill <n> times.",
+    "MOVE":     "move <n=1>      - Move <n> in facing direction.",
+    "RECHARGE": "recharge <n?>   - Recharge entity battery <n> units. HOME ONLY.",
+    "ROTATE":   "rotate <-3|3=1> - Rotate 90 degrees CW <n> or CCW <-n>.",
+    "UNLOAD":   "unload          - Move entity inventory to storage. HOME ONLY."
 };
