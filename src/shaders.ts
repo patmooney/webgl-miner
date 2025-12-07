@@ -44,7 +44,7 @@ void main() {
       vec2 l = u_light[i].xy + vec2(tileW, tileW);
       float d = distance(l.xy, instPos);
       if (d < u_light[i].z) {
-        bright += 1.0 - (d / u_light[i].z);
+        bright += min(0.8, 1.0 - (d / u_light[i].z));
       }
     }
   }
