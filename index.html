@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WebGL Miner</title>
     <link rel="icon" href="data:image/png;base64,iVBORw0KGgo=">
-    <script type="module" crossorigin src="./assets/index-D7XtQ0ME.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DZtApKre.css">
+    <script type="module" crossorigin src="./assets/index-GhsRXCEm.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Be-QqD21.css">
   </head>
   <body>
       <div class="container">
@@ -21,6 +21,16 @@
               <div id="nav">
                   <span> - Nav - </span>
                   <div class="active">Terminal</div>
+              </div>
+          </div>
+          <div id="editor-container" class="editor_modal hidden">
+              <div class="flex-col gap">
+                  <div id="editor-name"></div>
+                  <textarea id="editor"></textarea>
+                  <div class="flex-row justified">
+                      <button id="editor-save">Save</button>
+                      <button id="editor-cancel">Cancel</button>
+                  </div>
               </div>
           </div>
       </div>
