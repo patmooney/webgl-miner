@@ -356,7 +356,7 @@ Useful commands: storage, deploy`);
     initialStorage.forEach(([i, c]) => state.inventory.add(i, c));
     initialStory.forEach((w) => state.addWaypoint(w));
 
-    state.scripts["test"] = new Script(`
+    state.saveScript(new Script("test", `
         START:
             RUN move 3
             RUN mine 10
@@ -365,7 +365,7 @@ Useful commands: storage, deploy`);
             RUN unload
             RUN rotate 2
             RUN recharge
-    `);
+    `));
             
 
     state.inventory.hook = onStorage;
@@ -379,3 +379,5 @@ const delay = (timeMs: number) => {
     }
     return new Promise((res) => setTimeout(res, timeMs));
 }
+
+

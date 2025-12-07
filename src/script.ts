@@ -11,14 +11,18 @@ import { state } from "./state";
 // M_I stores value given from interrupt
 
 export class Script {
+    name: string;
     lines: LineType[];
+    content: string;
     errors: [number, string, [string, ValidationType]?][];
     labels: Record<string, number>;
-    constructor(script: string) {
+    constructor(name: string, script: string) {
         const [lines, errors, labels] = parse(script);
+        this.name = name;
         this.labels = labels;
         this.lines = lines;
         this.errors = errors;
+        this.content = script;
     }
 }
 
@@ -78,17 +82,17 @@ export class ScriptExecutor {
     }
     getMemory(mem: Memory) {
         const add = parseInt(mem.replace(/[^\d]+/, ""));
-        if (add) {
+        if (!isNaN(add)) {
             return this.memory[add];
         }
         return 0;
     }
     putMemory(mem: Memory, val: number) {
-        if (!isNaN(val)) {
+        if (isNaN(val)) {
             return;
         }
         const add = parseInt(mem.replace(/[^\d]+/, ""));
-        if (add) {
+        if (!isNaN(add)) {
             this.memory[add] = val;
         }
     }

@@ -14,6 +14,27 @@ canvas#c {
 div.container {
     margin: 10px auto;
     width: 1000px;
+    position: relative;
+}
+
+div.editor_modal {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    width: 400px;
+    background-color: #333;
+    height: 500px;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 5px;
+    & > div {
+        height: 100%;
+    }
+    & textarea {
+        flex-grow: 1;
+        background-color: black;
+        color: #55ff55;
+    }
 }
 
 div.control {
@@ -34,7 +55,7 @@ div#context {
     color: white;
 }
 
-div#context > div.hidden {
+div.hidden {
     display: none !important;
 }
 

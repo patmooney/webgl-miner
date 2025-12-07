@@ -21,6 +21,16 @@
                   <div class="active">Terminal</div>
               </div>
           </div>
+          <div id="editor-container" class="editor_modal hidden">
+              <div class="flex-col gap">
+                  <div id="editor-name"></div>
+                  <textarea id="editor"></textarea>
+                  <div class="flex-row justified">
+                      <button id="editor-save">Save</button>
+                      <button id="editor-cancel">Cancel</button>
+                  </div>
+              </div>
+          </div>
       </div>
       <script type="module" src="/src/main.ts"></script>
   </body>

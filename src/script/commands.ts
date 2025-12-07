@@ -84,7 +84,8 @@ const MOD = (exec: ScriptExecutor, args: string[]) => {
 }
 
 const RUN = (exec: ScriptExecutor, args: string[]) => {
-    const [cmd, ...values] = args;
+    const [cmd, ...rawValues] = args;
+    const values = rawValues.map((v) => numberOrMemory(exec, v).toString());
     const actions = entityCommand(exec.entity.id, cmd, values);
     if (actions) {
         exec.awaitActions(actions);
@@ -102,6 +103,6 @@ const numberOrMemory = (exec: ScriptExecutor, arg: string): number => {
     } else {
         val = exec.getMemory(arg as Memory);
     }
-    return val;
+    return val ?? 0;
 }
 

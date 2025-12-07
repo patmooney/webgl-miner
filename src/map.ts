@@ -144,6 +144,11 @@ export const getMap = (): Float32Array => {
     return _map;
 }
 
+export const resetMap = () => {
+    _map = undefined;
+    getMap();
+}
+
 export const updateMap = (update: Tile) => {
     const map = getMap();
     const tileN = update.tileN;

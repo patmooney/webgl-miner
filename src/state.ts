@@ -4,7 +4,7 @@ import { HISTORY_MAX, tileW } from "./constants";
 import { Entity } from "./entity";
 import type { EntityGraphics } from "./graphics/entity";
 import { Inventory } from "./invent";
-import { updateMap, type Tile } from "./map";
+import { resetMap, updateMap, type Tile } from "./map";
 import type { Script, ScriptExecutor } from "./script";
 import type { Item, WayPoint } from "./story";
 import { clamp } from "./utils/maths";
@@ -107,6 +107,7 @@ class State {
     }
 
     reset() {
+        resetMap();
         this.gl = undefined;
         this.actions = new Actions();
         this.entities = [];
@@ -196,6 +197,9 @@ class State {
     }
     cancelScripts(entityId: number) {
         this.executors = this.executors.filter((e) => e.entity.id !== entityId);
+    }
+    saveScript(s: Script) {
+        this.scripts[s.name] = s;
     }
 }
 

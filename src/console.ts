@@ -1,5 +1,6 @@
 import type { Action, ActionType } from "./actions";
 import { CONSOLE_LINES, IS_DEV } from "./constants";
+import { onEdit } from "./editor.interface";
 import { Entity } from "./entity";
 import { end } from "./graphics/main";
 import { coordToTile, getTileAt, TILE_TYPE } from "./map";
@@ -11,16 +12,17 @@ import { clearTexMap } from "./utils/webgl";
 const output = document.querySelector('#control_console div#output');
 
 type commandsType = "list" | "storage" | "deploy" | "select" | "selected" | "commands" | "inventory" | "uninstall" |
-    "actions" | "battery" | "cancel" | "halt" | "modules" | "focus" | "exec" | "install" | "save";
+    "actions" | "battery" | "cancel" | "halt" | "modules" | "focus" | "exec" | "install" | "save" | "edit";
 type commandGroup = "Manage" | "Entity";
 
 const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
     Manage: [
         ["list", "List available entities.", ""],
         ["storage", "Show current store inventory.", ""],
-        ["deploy", "Deploy from storage. Ex. deploy <deployable_name> <label>", "str, str?"],
+        ["deploy", "Deploy from storage. Ex. deploy <deployable_name> <label>.", "str, str?"],
         ["select", "Select entity for control.", "int"],
         ["selected","Show currently selected entitiy.", ""],
+        ["edit", "Edit a script.", "str"]
     ],
     Entity: [
         ["commands","List available commands for selected entity.", ""],
@@ -28,9 +30,9 @@ const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
         ["battery","Show current entity battery value.", ""],
         ["modules","List currently installed modules and stats.", ""],
         ["exec","Execute a named script.", ""],
-        ["install","Install a module from the main storage", "str"],
-        ["uninstall", "Remove an installed module", "str"],
-        ["actions", "Display queue of actions", ""],
+        ["install","Install a module from the main storage.", "str"],
+        ["uninstall", "Remove an installed module.", "str"],
+        ["actions", "Display queue of actions.", ""],
         ["focus","Move camera and follow selected entity.", ""],
         ["cancel","Cancel current action where possible.", ""],
         ["halt","Cancel all queued actions where possible.", ""],
@@ -187,6 +189,7 @@ const metaCommand = (cmd: string, values: string[]): boolean | undefined => {
         case "save": command_Save(); return true;
         case "load": command_Load(); return true;
         case "reset": command_Reset(); return true;
+        case "edit": command_Edit(value); return true;
     };
 
     if (entityCommands.includes(cmd)) {
@@ -457,3 +460,7 @@ export const command_Actions = (selected: Entity) => {
         print(` - ${a.type} [${a.value}]`);
     });
 };
+
+export const command_Edit = (name: string) => {
+    onEdit(name);
+}
