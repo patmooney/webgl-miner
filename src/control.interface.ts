@@ -142,7 +142,7 @@ const listEntities = () => {
     state.entities.forEach((e) => {
         const entityDiv = document.createElement("div");
         entityDiv.dataset["id"] = e.id.toString();
-        entityDiv.textContent = `[${e.id}] ${e.type}`;
+        entityDiv.textContent = `[${e.id}] ${e.name}`;
         container.appendChild(entityDiv);
         entityDiv.addEventListener("click", () => state.selectEntity(e.id));
     });

@@ -35,7 +35,7 @@ export class ScriptExecutor {
         if (lineN >= this.script.lines.length) {
             return;
         }
-        const [cmd, ...args] = this.script.lines[lineN];
+        const [cmd] = this.script.lines[lineN];
         if (isLabel(cmd)) {
             return this.run(lineN + 1);
         }
