@@ -71,6 +71,9 @@ export const parse = (script: string): [LineType[], [number,ErrorType,[string, V
     const labelsMap: Record<string, number> = {};
     const unknownErrs = lines.reduce<[number, ErrorType][]>(
         (acc, [cmd], idx) => {
+            if (cmd === "RUN") {
+                return acc;
+            }
             if (!validation[cmd as Syntax] && !labelRe.test(cmd)) {
                 acc.push([idx, "UNKNOWN"]);
                 return acc;
@@ -84,7 +87,6 @@ export const parse = (script: string): [LineType[], [number,ErrorType,[string, V
                     labelsMap[labelCmd] = idx;
                 }
             }
-
             return acc;
         }, []
     );

@@ -92,9 +92,10 @@ export class Actions {
         this.hook.dispatchEvent(new CustomEvent(ACTION_ADD_EVENT, { detail: a }));
         return a;
     }
-    addSilentAction(type: ActionType, { delta, value, timeEnd, entityId }: IAction, parentId?: string) {
+    addSilentAction(type: ActionType, { delta, value, timeEnd, entityId }: IAction, parentId?: string): Action {
         const a = new Action(type, { delta, value, timeEnd, entityId }, true, parentId);
         this.stack.push(a);
+        return a;
     }
     cancelOneForEntity(entityId: number): Action | undefined {
         const action = this.stack.find((a) => a.entityId === entityId);

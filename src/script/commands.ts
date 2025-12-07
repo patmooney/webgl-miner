@@ -1,3 +1,4 @@
+import { entityCommand } from "../console";
 import type { ScriptExecutor } from "../script";
 import { validationFn, type Memory, type Syntax } from "./validation";
 
@@ -82,7 +83,13 @@ const MOD = (exec: ScriptExecutor, args: string[]) => {
     exec.putMemory(mem as Memory, val1 % val2);
 }
 
-const RUN = () => {};
+const RUN = (exec: ScriptExecutor, args: string[]) => {
+    const [cmd, ...values] = args;
+    const actions = entityCommand(exec.entity.id, cmd, values);
+    if (actions) {
+        exec.awaitActions(actions);
+    }
+};
 
 export const ScriptCommands: Record<Syntax, (exec: ScriptExecutor, args: string[]) => boolean | void> = {
     JMP, PUT, JEQ, JGT, JLT, JZE, SUB, ADD, MUL, DIV, MOD, RUN

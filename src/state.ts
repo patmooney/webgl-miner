@@ -1,9 +1,10 @@
 import { Actions, Action } from "./actions";
+import { print } from "./console";
 import { HISTORY_MAX, tileW } from "./constants";
 import { Entity } from "./entity";
 import type { EntityGraphics } from "./graphics/entity";
 import { Inventory } from "./invent";
-import type { Tile } from "./map";
+import { updateMap, type Tile } from "./map";
 import type { Script, ScriptExecutor } from "./script";
 import type { Item, WayPoint } from "./story";
 import { clamp } from "./utils/maths";
@@ -47,6 +48,7 @@ class State {
             gl: undefined,
             entityGfx: undefined,
             entities: this.entities.map((e) => e.getSave()),
+            executors: [],
             lights: [],
             actions: actions
         }
@@ -96,7 +98,10 @@ class State {
             Object.assign(this.inventory, save.inventory);
         }
         this.actions.mapChanges.forEach(
-            (change) => this.actions.mapUpdates.push(change)
+            (change) => {
+                updateMap(change);
+                this.actions.mapUpdates.push(change);
+            }
         );
         this.updateLights();
     }
@@ -179,6 +184,18 @@ class State {
         if (this.inventory.remove(item)) {
             this.onDeploy?.(item, name);
         }
+    }
+    runScripts() {
+        for (let s of this.executors) {
+            s.run();
+            if (s.isComplete) {
+                print(`Script finished`);
+            }
+        }
+        this.executors = this.executors.filter((e) => !e.isComplete);
+    }
+    cancelScripts(entityId: number) {
+        this.executors = this.executors.filter((e) => e.entity.id !== entityId);
     }
 }
 

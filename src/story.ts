@@ -5,6 +5,7 @@ import * as controlInterface from "./control.interface";
 import { Entity, type IEntityStats } from "./entity";
 import type { ActionType } from "./actions";
 import { IS_DEV } from "./constants";
+import { Script } from "./script";
 
 export type WayPoint =
     "STORAGE_FIRST" |
@@ -354,6 +355,18 @@ Useful commands: storage, deploy`);
 
     initialStorage.forEach(([i, c]) => state.inventory.add(i, c));
     initialStory.forEach((w) => state.addWaypoint(w));
+
+    state.scripts["test"] = new Script(`
+        START:
+            RUN move 3
+            RUN mine 10
+            RUN rotate 2
+            RUN move 3
+            RUN unload
+            RUN rotate 2
+            RUN recharge
+    `);
+            
 
     state.inventory.hook = onStorage;
     state.onStory = onStory;

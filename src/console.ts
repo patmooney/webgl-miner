@@ -3,6 +3,7 @@ import { CONSOLE_LINES, IS_DEV } from "./constants";
 import { Entity } from "./entity";
 import { end } from "./graphics/main";
 import { coordToTile, getTileAt, TILE_TYPE } from "./map";
+import { ScriptExecutor } from "./script";
 import { state } from "./state";
 import { onCraft, type Item, Items, type ItemInfoModule, type ItemInfoCraftable, type ItemInfoInterface, type ItemInfoBase, type Item_Module, start } from "./story";
 import { clearTexMap } from "./utils/webgl";
@@ -131,8 +132,8 @@ export const parseCmd = (val: string) => {
     } else if (isMeta) {
         return;
     }
-    const isCommand = entityCommand(cmd, values);
-    if (isCommand === false) {
+    const isCommand = entityCommand(state.selectedEntity, cmd, values);
+    if (isCommand === undefined) {
         printError("No entity selected!");
         return;
     } else if (isCommand) {
@@ -142,10 +143,8 @@ export const parseCmd = (val: string) => {
     printError(`Unknown command: ${cmd}`);
 };
 
-
-
-const entityCommand = (cmd: string, values: string[]): boolean | undefined => {
-    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
+export const entityCommand = (entityId: number | undefined, cmd: string, values: string[]): string[] | undefined => {
+    const selected = entityId !== undefined ? state.entities.find((e) => e.id === entityId) : undefined;
     if (!selected) {
         return undefined;
     }
@@ -153,14 +152,17 @@ const entityCommand = (cmd: string, values: string[]): boolean | undefined => {
 
     const addAction = (actionType: ActionType) => {
         const intVal = parseInt(value ?? 0);
+        let actions: string[] = [];
         const action = state.actions.addAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal });
+        actions.push(action.id);
         if (actionType === "MOVE" || actionType === "ROTATE" || actionType === "MINE") {
             // OK the value for these is how many times to repeat
             for (let i = 1; i < (action.value ?? intVal); i++) {
-                state.actions.addSilentAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal }, action.id);
+                const subAction = state.actions.addSilentAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal }, action.id)
+                actions.push(subAction.id);
             }
         }
-        return true;
+        return actions;
     };
 
     if (selected.actions.includes(cmd.toUpperCase() as ActionType)) {
@@ -316,6 +318,7 @@ export const command_Cancel = (selected: Entity, _: string) => {
 
 export const command_Halt = (selected: Entity, _: string) => {
     state.actions.cancelAllForEntity(selected.id);
+    state.cancelScripts(selected.id);
     print(`Entity [${selected.id}] cancel all queued actions`);
 };
 
@@ -404,11 +407,13 @@ export const command_Crafting = (recipe?: string) => {
     return true;
 };
 
-export const command_Exec = (_: Entity, name: string) => {
+export const command_Exec = (selected: Entity, name: string) => {
     if (!state.scripts[name]) {
         printError(`Unknown script ${name}`);
         return true;
     }
+    const executor = new ScriptExecutor(selected, state.scripts[name]);
+    state.executors.push(executor);
     return true;
 }
 

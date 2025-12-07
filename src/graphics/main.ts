@@ -35,9 +35,7 @@ const loop = async (gl: WebGL2RenderingContext) => {
         }
         await new Promise<void>((finishRender) => requestAnimationFrame(() => {
             const actions = state.actions.getActions();
-            for (let s of state.executors) {
-                s.run();
-            }
+            state.runScripts();
             for (let e of state.entities) {
                 const action = actions.find((a) => a.entityId === e.id);
                 e.update(action);

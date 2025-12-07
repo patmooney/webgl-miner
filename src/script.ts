@@ -31,6 +31,7 @@ export class ScriptExecutor {
     actions: string[];
     memory: number[];
     execTime: number | undefined;
+    isComplete: boolean = false;
 
     constructor(e: Entity, s: Script) {
         this.entity = e;
@@ -43,17 +44,19 @@ export class ScriptExecutor {
         });
     }
     run(): void {
-        if (this.execTime && this.execTime < Date.now()) {
+        if (this.lineIdx >= this.script.lines.length) {
+            this.isComplete = true;
+            // End of script
+            return;
+        }
+        if (this.execTime && Date.now() < this.execTime) {
             // Not ready to run yet
             return;
         }
+
+        this.execTime = Date.now() + EXEC_TIME;
         if (this.actions.length) {
             // Awaiting actions
-            this.execTime = Date.now() + EXEC_TIME;
-            return;
-        }
-        if (this.lineIdx >= this.script.lines.length) {
-            // End of script
             return;
         }
 
@@ -63,7 +66,6 @@ export class ScriptExecutor {
             this.lineIdx++;
             return this.run();
         }
-
         ScriptCommands[cmd](this, args);
 
         this.lineIdx++;
