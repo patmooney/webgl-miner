@@ -1,96 +1,59 @@
 import './style.css'
 
-import { Entity } from './entity';
-import { initMouse } from './input';
+import { init as initInput } from './input';
 import { state } from './state';
-import * as webglUtils from "./utils/webgl";
 import * as csl from "./console";
 
-import { World } from './world';
-import { size, tileW } from './constants';
-import { initMap } from './map';
+import { onStorage, onStory, type WayPoint, type Item, onDeploy } from './story';
 import { Inventory } from './invent';
-import { onStorage, onStory, type WayPoint, type Item } from './story';
-import { EntityGraphics } from './graphics/entity';
+import { init as initGfx } from './graphics/main';
+import { IS_DEV } from './constants';
 
-const loop = async (gl: WebGL2RenderingContext) => {
-    initMap();
-    const w = new World();
-    state.inventory = new Inventory(onStorage);
-    state.onStory = onStory;
-    state.gl = gl;
+const run = async () => {
+    initInput();
+    state.inventory = new Inventory();
 
-    const entityGraphics = new EntityGraphics();
-    await entityGraphics.initGraphics(gl);
-    state.entityGfx = entityGraphics;
-
-    state.entities.push(
-        new Entity(
-            entityGraphics,
-            state.entities.length, "MINER",
-            ["ROTATE", "MOVE", "MINE", "UNLOAD", "RECHARGE"],
-            ["module_dev"]
-        )
-    );
-
-    state.camera = [((size/2) - 9) * tileW, ((size/2) - 7) * tileW];
-
-    initMouse();
-
-    for (let e of state.entities) {
-        await e.init();
-    }
-    await w.init(gl);
+    csl.printImportant("Welcome...");
+    await delay(500);
+    csl.print("Initialising environment...");
+    await delay(500);
+    csl.printWarning("INIT CONNECTION...");
+    await delay(100);
+    csl.printWarning("INIT CAMERA...");
+    await delay(500);
+    initGfx();
+    await delay(1500);
+    csl.printWarning("INIT COMPLETE");
+    await delay(1500);
+    csl.command_Clear();
+csl.printImportant(`Your first task will be to deploy and construct a mining automation
+========
+Type "help" to get started
+Useful commands: storage, deploy
+`);
 
     const initialStory: WayPoint[] = [];
-    const initialStorage: [Item, number][] = [];
+    const initialStorage: [Item, number][] = [
+        ["deployable_automation_hull", 1],
+        ["module_basic_drill", 1],
+        ["module_basic_motor", 1],
+        ["module_basic_store", 1],
+        ["module_basic_battery", 1],
+    ];
 
     initialStorage.forEach(([i, c]) => state.inventory.add(i, c));
     initialStory.forEach((w) => state.addWaypoint(w));
 
-    let time = 0;
-    csl.command_Welcome();
-    state.updateLights();
+    state.inventory.hook = onStorage;
+    state.onStory = onStory;
+    state.onDeploy = onDeploy;
+};
 
-    while(true) {
-        await new Promise<void>((finishRender) => requestAnimationFrame(() => {
-            time += 0.05;
-
-            const actions = state.actions.getActions();
-            for (let e of state.entities) {
-                const action = actions.find((a) => a.entityId === e.id);
-                e.update(action);
-            }
-            w.update(gl, state.actions.getMapUpdates())
-
-            webglUtils.resizeCanvasToDisplaySize(gl.canvas as HTMLCanvasElement);
-            // Tell WebGL how to convert from clip space to pixels
-            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-            // Clear the canvas
-            gl.clearColor(0.1, 0.1, 0.1, 1);
-            gl.enable(gl.BLEND);
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-            w.render(gl, state.camera);
-            for (let e of state.entities) {
-               e.render(gl, state.camera);
-            }
-            finishRender();
-        }));
-    }
-}
-
-const run = () => {
-    const canvas = document.querySelector("#c") as HTMLCanvasElement;
-    const gl = canvas.getContext("webgl2", { premultipliedAlpha: false });
-    gl?.getExtension("EXT_color_buffer_float");
-
-    if (!gl) {
+const delay = (timeMs: number) => {
+    if (IS_DEV) {
         return;
     }
-    loop(gl);
-};
+    return new Promise((res) => setTimeout(res, timeMs));
+}
 
 run();

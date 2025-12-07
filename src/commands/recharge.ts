@@ -4,7 +4,7 @@ import type { Entity } from "../entity";
 import { coordToTile, getTileAt, TILE_TYPE } from "../map";
 
 export const BATTERY_COST = 0;
-const RECHARGE_TIME_MS = 1000;
+const RECHARGE_TIME_MS = 1100;
 
 export const command = function(this: Entity, action: Action) {
     if (!action.isStarted) {
@@ -15,7 +15,7 @@ export const command = function(this: Entity, action: Action) {
             action.complete();
             return;
         }
-        action.timeEnd = Date.now() + RECHARGE_TIME_MS
+        action.timeEnd = Date.now() + (RECHARGE_TIME_MS - (this.rechargeSpeed * 100));
         action.start();
     }
     if (action.timeEnd! > Date.now()) {
@@ -29,5 +29,5 @@ export const command = function(this: Entity, action: Action) {
         return;
     }
     this.battery++;
-    action.timeEnd = Date.now() + RECHARGE_TIME_MS;
+    action.timeEnd = Date.now() + (RECHARGE_TIME_MS - (this.rechargeSpeed * 100));
 };

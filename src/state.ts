@@ -3,7 +3,8 @@ import { HISTORY_MAX, tileW } from "./constants";
 import type { Entity } from "./entity";
 import type { EntityGraphics } from "./graphics/entity";
 import { Inventory } from "./invent";
-import type { WayPoint } from "./story";
+import type { Script } from "./script";
+import type { Item, WayPoint } from "./story";
 import { clamp } from "./utils/maths";
 import type { Vec2D } from "./world";
 
@@ -25,6 +26,8 @@ class State {
     story: { [key in WayPoint]?: boolean } = {};
     history: string[] = [];
     onStory?: (waypoint: WayPoint) => void;
+    onDeploy?: (item: Item, name?: string) => void;
+    scripts: Record<string, Script>;
 
     lights: Float32Array;
 
@@ -36,6 +39,7 @@ class State {
         this.inventory = inventory;
         this.onStory = onStory;
         this.entityHook = new EventTarget();
+        this.scripts = {};
     }
     selectEntity(id: number) {
         if (this.focusEntity(id)) {
@@ -47,7 +51,7 @@ class State {
         const entity = this.entities.find((e) => e.id === id);
         if (entity) {
             this.isFollowing = id;
-            this.camera = [entity.coords[0] - (8.5 * tileW), entity.coords[1]  - (6.5 * tileW)];
+            this.camera = [entity.coords[0] - (11 * tileW), entity.coords[1]  - (6.5 * tileW)];
             this.zoom = 0;
             return true;
         }
@@ -91,6 +95,11 @@ class State {
             lights[(idx*3)+2] = 5 * tileW;
         }
         this.lights = lights;
+    }
+    deploy(item: Item, name?: string) {
+        if (this.inventory.remove(item)) {
+            this.onDeploy?.(item, name);
+        }
     }
 }
 

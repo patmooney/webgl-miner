@@ -1,113 +1,45 @@
 import type { Action, ActionType } from "./actions";
-import { CONSOLE_LINES } from "./constants";
+import { CONSOLE_LINES, IS_DEV } from "./constants";
 import { Entity } from "./entity";
-import { Script } from "./script";
 import { state } from "./state";
-import { onCraft, Recipes, type RecipeInterface, type RecipeName, type Item, ItemLabels } from "./story";
+import { onCraft, type Item, Items, type ItemInfoModule, type ItemInfoCraftable, type ItemInfoInterface, type ItemInfoBase, type Item_Module } from "./story";
 
 const output = document.querySelector('#control_console div#output');
 
-export const parseCmd = (val: string) => {
-    print(" ");
-    print(` > ${val}`);
-    const [rawCmd, value] = val.split(" ");
-    const cmd = rawCmd.toLowerCase();
+type commandsType = "list" | "storage" | "deploy" | "select" | "selected" | "commands" | "inventory" |
+    "battery" | "cancel" | "halt" | "modules" | "focus" | "exec" | "install";
+type commandGroup = "Manage" | "Entity";
 
-    const isMeta = metaCommand(cmd, value);
-    if (isMeta === false) {
-        printError("Invalid argument");
-        return;
-    } else if (isMeta) {
-        return;
-    }
-    const isCommand = entityCommand(cmd, value);
-    if (isCommand === false) {
-        printError("No entity selected!");
-        return;
-    } else if (isCommand) {
-        return;
-    }
-
-    printError(`Unknown command: ${cmd}`);
+const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
+    Manage: [
+        ["list", "List available entities.", ""],
+        ["storage", "Show current store inventory.", ""],
+        ["deploy", "Deploy from storage. Ex. deploy <deployable_name> <label>", "str, str?"],
+        ["select", "Select entity for control.", "int"],
+        ["selected","Show currently selected entitiy.", ""],
+    ],
+    Entity: [
+        ["commands","List available commands for selected entity.", ""],
+        ["inventory","Show current entity inventory.", ""],
+        ["battery","Show current entity battery value.", ""],
+        ["modules","List currently installed modules and stats.", ""],
+        ["exec","Execute a named script.", ""],
+        ["install","Install a module from the main storage", "str"],
+        ["focus","Move camera and follow selected entity.", ""],
+        ["cancel","Cancel current action where possible.", ""],
+        ["halt","Cancel all queued actions where possible.", ""],
+    ]
 };
 
-export const printWarning = (str: string) => {
-    print (`[WARNING] ${str}`, "warning");
-}
-
-export const printError = (str: string) => {
-    print(`[ERROR] ${str}`, "error");
-}
-
-const entityCommand = (cmd: string, value: string): boolean | undefined => {
-    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
-    if (!selected) {
-        return undefined;
-    }
-
-    const addAction = (actionType: ActionType) => {
-        const intVal = parseInt(value ?? 0);
-        const action = state.actions.addAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal });
-        if (actionType === "MOVE" || actionType === "ROTATE" || actionType === "MINE") {
-            // OK the value for these is how many times to repeat
-            for (let i = 1; i < (action.value ?? intVal); i++) {
-                state.actions.addSilentAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal }, action.id);
-            }
-        }
-        return true;
-    };
-
-    if (selected.actions.includes(cmd.toUpperCase() as ActionType)) {
-        return addAction(cmd.toUpperCase() as ActionType);
-    }
-
-    return undefined;
+const CommandHelp: Record<ActionType, [string, string, string]> = {
+    "MINE":     ["mine", "Activate drill <n> times.", "int=1"],
+    "MOVE":     ["move", "Move <n> in facing direction.", "int=1"],
+    "RECHARGE": ["recharge", "Recharge entity battery <n> units. HOME ONLY.", "int?"],
+    "ROTATE":   ["rotate", "Rotate 90 degrees CW <n> or CCW <-n>.", "int [-3, 3]"],
+    "UNLOAD":   ["unload", "Move entity inventory to storage. HOME ONLY.", ""]
 };
 
-const metaCommand = (cmd: string, value: string): boolean | undefined => {
-    switch (cmd) {
-        case "help": command_Help(); return true;
-        case "list": command_List(); return true;
-        case "selected": command_Selected(); return true;
-        case "commands": command_Commands(); return true;
-        case "storage": command_Storage(); return true;
-        case "inventory": command_Inventory(); return true;
-        case "battery": command_Battery(); return true;
-        case "cancel": command_Cancel(); return true;
-        case "halt": command_Halt(); return true;
-        case "select": return selectEntity(parseInt(value));
-        case "crafting": return command_Crafting(value);
-        case "modules": command_Modules(); return true;
-        case "focus": command_Focus(); return true;
-        case "dev_spawn": command_DEV_SPAWN(); return true;
-        case "exec": return command_Exec(value);
-        default: return undefined;
-    };
-};
-
-const selectEntity = (entityId: number) => {
-    if (isNaN(entityId)) {
-        return false;
-    }
-    const entity = state.entities.find((e) => e.id === entityId);
-    if (!entity) {
-        return false;
-    }
-    state.selectEntity(entityId);
-    print(`Entity ${entityId} selected`);
-    return true;
-}
-
-export const printAction = (e: Entity, a: Action | undefined) => {
-    if (!a || a.isSilent) {
-        return;
-    }
-    print(`[${(Date.now() / 1000).toFixed(0)}] Entity [${e.id}] - ${a.type}: ${a.value}`, "log");
-};
-
-export const printEntity = (id: number, msg: string) => {
-    print(`[ENTITY:${id}] ${msg}`);
-}
+const entityCommands = ConsoleHelp.Entity.map((c) => c.at(0));
 
 export const print = (str: string, className?: string) => {
     const lines = str.split("\n").map(
@@ -133,160 +65,281 @@ export const printImportant = (str: string) => {
     print(str, "important");
 };
 
-export const command_Welcome = () => {
-    printImportant(`Welcome
-========
-Type "help" to get started`);
+export const printWarning = (str: string) => {
+    print (`[WARNING] ${str}`, "warning");
+}
+
+export const printHeader = (str: string, isBold = true) => {
+    print(str, isBold ? "bold header white" : "header black");
+}
+
+export const printError = (str: string) => {
+    print(`[ERROR] ${str}`, "error");
+}
+
+export const printAction = (e: Entity, a: Action | undefined) => {
+    if (!a || a.isSilent) {
+        return;
+    }
+    print(`[${(Date.now() / 1000).toFixed(0)}] Entity [${e.id}] - ${a.type}: ${a.value}`, "log");
 };
+
+export const printEntity = (id: number, msg: string) => {
+    print(`[ENTITY:${id}] ${msg}`);
+}
+
+export const printTable = (rows: string[][], headers?: string[], div = " ") => {
+    const colWidths = [...(headers ? [headers] : []), ...rows].reduce<number[]>(
+        (acc, row) => {
+            row.forEach((s, idx) => {
+                acc[idx] = Math.max(acc[idx] ?? 0, s.length);
+            });
+            return acc;
+        }, []
+    );
+    if (headers) {
+        printHeader(
+            headers.map(
+                (col, idx) => col.padEnd(colWidths[idx] ?? 0)
+            ).join(div), false
+        )
+    }
+    rows.forEach((row) => {
+        print(
+            row.map(
+                (col, idx) => col.padEnd(colWidths[idx] ?? 0)
+            ).join(div)
+        )
+    });
+};
+
+export const parseCmd = (val: string) => {
+    print(" ");
+    print(` > ${val}`);
+    const [rawCmd, ...values] = val.split(" ");
+    const cmd = rawCmd.toLowerCase();
+
+    const isMeta = metaCommand(cmd, values);
+    if (isMeta === false) {
+        printError("Invalid argument");
+        return;
+    } else if (isMeta) {
+        return;
+    }
+    const isCommand = entityCommand(cmd, values);
+    if (isCommand === false) {
+        printError("No entity selected!");
+        return;
+    } else if (isCommand) {
+        return;
+    }
+
+    printError(`Unknown command: ${cmd}`);
+};
+
+
+
+const entityCommand = (cmd: string, values: string[]): boolean | undefined => {
+    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
+    if (!selected) {
+        return undefined;
+    }
+    const [value] = values;
+
+    const addAction = (actionType: ActionType) => {
+        const intVal = parseInt(value ?? 1);
+        const action = state.actions.addAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal });
+        if (actionType === "MOVE" || actionType === "ROTATE" || actionType === "MINE") {
+            // OK the value for these is how many times to repeat
+            for (let i = 1; i < (action.value ?? intVal); i++) {
+                state.actions.addSilentAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal }, action.id);
+            }
+        }
+        return true;
+    };
+
+    if (selected.actions.includes(cmd.toUpperCase() as ActionType)) {
+        return addAction(cmd.toUpperCase() as ActionType);
+    }
+
+    return undefined;
+};
+
+const metaCommand = (cmd: string, values: string[]): boolean | undefined => {
+    const [value] = values;
+    switch (cmd) {
+        case "help": command_Help(); return true;
+        case "list": command_List(); return true;
+        case "select": return selectEntity(parseInt(value));
+        case "storage": command_Storage(); return true;
+        case "deploy": return command_Deploy(values);
+        case "clear": command_Clear(); return true;
+        case "crafting": return command_Crafting(value);
+        case "selected": command_Selected(); return true;
+        case "dev_spawn": return command_DEV_SPAWN();
+    };
+
+    if (entityCommands.includes(cmd)) {
+        const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
+        if (selected) {
+            switch(cmd) {
+                case "commands": command_Commands(selected, value); return true;
+                case "inventory": command_Inventory(selected, value); return true;
+                case "battery": command_Battery(selected, value); return true;
+                case "cancel": command_Cancel(selected, value); return true;
+                case "halt": command_Halt(selected, value); return true;
+                case "focus": command_Focus(selected, value); return true;
+                case "modules": command_Modules(selected, value); return true;
+                case "exec": return command_Exec(selected, value);
+                case "install": return command_Install(selected, value);
+            }
+        } else {
+            printError(`No entity selected.`);
+            return true;
+        }
+    }
+
+    return undefined;
+};
+
+const selectEntity = (entityId: number) => {
+    if (isNaN(entityId)) {
+        return false;
+    }
+    const entity = state.entities.find((e) => e.id === entityId);
+    if (!entity) {
+        return false;
+    }
+    state.selectEntity(entityId);
+    print(`Entity ${entityId} selected`);
+    return true;
+}
 
 export const command_List = () => {
-    print(`
-ENTITIES
-==========
-
-${state.entities.map((e) => `[${e.id}] - ${e.type}`).join("\n")}
-`);
-};
+    printHeader("Entities");
+    print(state.entities.map((e) => `[${e.id}] - ${e.name}`).join("\n"));
+}
 
 export const command_Help = () => {
     const extra: string[] = [];
     if (state.story.STORAGE_FIRST) {
         extra.push(`crafting    - List and craft available recipes`);
     }
-    print(`
-HELP
-=====
-
-- Manage -
-list       - List available entities.
-storage    - Show current store inventory.
-
-- Entity -
-select <n> - Select entity for control.
-selected   - Show currently selected entitiy.
-commands   - List available commands for selected entity.
-inventory  - Show current entity inventory.
-battery    - Show current entity battery value.
-cancel     - Cancel current action where possible.
-halt       - Cancel all queued actions including current where possible.
-modules    - List currently installed modules and stats.
-focus      - Move camera and follow selected entity.
-exec <s>   - Execute a named script.
-${extra.join("\n")}
+    printHeader("Help");
+    print(` - Manage -
 `);
+    printTable(ConsoleHelp.Manage, ["Command", "Description", "Args"], " | ");
+    print(`
+- Entity -
+`);
+    printTable(ConsoleHelp.Entity, ["Command", "Description", "Args"], " | ");
 };
+
+export const command_Deploy = ([value, label]: string[]) => {
+    if (value && Items[value as Item]?.type === "DEPLOYABLE") {
+        state.deploy(value as Item, label);
+        return true;
+    }
+    printError(`"${value}" is not recognised as a deployable item.`);
+    return true;
+}
 
 export const command_Selected = () => {
     const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
-    print(`
-SELECTED
-=========
-
-${selected ? `[${selected.id}] - ${selected.type}` : "- NONE -"}
-`);
+    printHeader("Selected");
+    print(selected ? `[${selected.id}] - ${selected.name}` : "- NONE -");
 };
 
-export const command_Commands = () => {
-    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
-    if (!selected) {
-        return printError(`No entity selected`);
-    }
-print(`
-COMMANDS
-=========
-
-${selected.actions.map((act) => ` - ${commandHelp[act]}`).join("\n")}
-`);
+export const command_Commands = (selected: Entity, _2: string) => {
+    printHeader("Commands");
+    const actions = selected.actions;
+    printTable(actions.map((action) => CommandHelp[action]), ["Command", "Description", "Args"], " | ");
 }
 
 export const command_Storage = () => {
-    print(`
-STORAGE
-========
-
-${Object.entries(state.inventory.inventory).map(([k, v]) => `${ItemLabels[k as Item]} - ${v}`).join("\n")}
-`);
+    printHeader("Storage");
+    printItems(Object.entries(state.inventory.inventory).map<[Item, number]>(([k, v]) => ([k as Item, v])));
 };
 
-export const command_Focus = () => {
-    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
-    if (!selected) {
-        return printError(`No entity selected`);
-    }
+const printItems = (items: [Item, number][]) => {
+    const rows = items.map(([k, v]) => (
+        [`[${k}]`, Items[k].label, Items[k].type, (Items[k] as ItemInfoModule).quality ?? "", v.toString()]
+    ));
+    printTable(rows, ["Name", "Label", "Type", "Quality", "Quantity"], " | ");
+};
+
+export const command_Focus = (selected: Entity, _: string) => {
     state.focusEntity(selected.id);
 }
 
-export const command_Inventory = () => {
-    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
-    if (!selected) {
-        return printError(`No entity selected`);
-    }
-    print(`
-INVENTORY
-==========
-Slots: ${selected.inventory.total} / ${selected.inventory.limit ?? "-"}
-
-${Object.entries(selected.inventory.inventory).map(([k, v]) => `${ItemLabels[k as Item]} - ${v}`).join("\n")}
-`);
-
+export const command_Inventory = (selected: Entity, _: string) => {
+    printHeader("Inventory");
+    print(`Slots: ${selected.inventory.total} / ${selected.inventory.limit ?? "-"}`);
+    printItems(Object.entries(selected.inventory.inventory).map<[Item, number]>(([k, v]) => ([k as Item, v])));
 };
 
-export const command_Battery = () => {
-    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
-    if (!selected) {
-        return printError(`No entity selected`);
-    }
-    print(`Entity [${selected.id}] battery: ${selected.battery} / 100`);
+export const command_Battery = (selected: Entity, _: string) => {
+    print(`Entity [${selected.id}] battery: ${selected.battery} / ${selected.maxBattery}`)
 };
 
-export const command_Modules = () => {
-    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
-    if (!selected) {
-        return printError(`No entity selected`);
-    }
-    print(`
-INSTALLED MODULES
-==================
-
-${selected.modules.map((mod) => ` - ${ItemLabels[mod]}`).join("\n")}
-
-[ Movement: ${selected.speed} ] [ Drill: ${selected.drillSpeed} ] [ Battery: ${selected.battery} / ${selected.maxBattery} ]
-`);
+export const command_Modules = (selected: Entity, _: string) => {
+    printHeader("Installed Modules");
+    printTable(
+        selected.modules.map((name) => {
+            const mod = Items[name] as ItemInfoModule;
+            return [name, mod.label, mod.quality, mod.moduleType];
+        }),
+        ["Name", "Label", "Quality", "Type"],
+        " | "
+    );
+    print(`[ Movement: ${selected.speed} ] [ Drill: ${selected.drillSpeed} ] [ Battery: ${selected.battery} / ${selected.maxBattery} ]`);
 };
 
 
-export const command_Cancel = () => {
-    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
-    if (!selected) {
-        return printError(`No entity selected`);
-    }
+export const command_Cancel = (selected: Entity, _: string) => {
     const action = state.actions.cancelOneForEntity(selected.id);
     if (action) {
         print(`Entity [${selected.id}] request to cancel ${action.type}`);
     }
 };
 
-export const command_Halt = () => {
-    const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
-    if (!selected) {
-        return printError(`No entity selected`);
-    }
+export const command_Halt = (selected: Entity, _: string) => {
     state.actions.cancelAllForEntity(selected.id);
     print(`Entity [${selected.id}] cancel all queued actions`);
 };
 
-export const command_DEV_SPAWN = () => {
+export const command_Install = (selected: Entity, mod: string) => {
+    if (!Items[mod as Item_Module]) {
+        printError(`Unknown or missing module - "${mod}"`);
+    }
+    if (!state.inventory.remove(mod as Item, 1)) {
+        printError(`Unknown or missing module - "${mod}"`);
+    }
+    if (!selected.installModule(mod as Item_Module)) {
+        printError(`Unable to install ${mod}, slot already used or incompatible`);
+        state.inventory.add(mod as Item, 1);
+    }
+    return true;
+};
+
+export const command_DEV_SPAWN = (): boolean | undefined => {
     if (!state.gl || !state.entityGfx) {
+        return;
+    }
+    if (!IS_DEV) {
         return;
     }
     const e =  new Entity(
         state.entityGfx,
-        state.entities.length, "MINER",
+        state.entities.length, "DEVBOT",
         ["ROTATE", "MOVE", "MINE", "UNLOAD", "RECHARGE"],
         ["module_dev"]
     );
     e.init();
     state.entities.push(e);
+    state.updateLights();
+    selectEntity(e.id);
+    return true;
 };
 
 export const command_Crafting = (recipe?: string) => {
@@ -294,48 +347,43 @@ export const command_Crafting = (recipe?: string) => {
         return undefined;
     }
     if (recipe?.trim()) {
-        if (!Recipes[recipe as RecipeName]) {
+        if (!(Items[recipe as Item] as ItemInfoCraftable).ingredients) {
             printError(`Unknown recipe: ${recipe}`);
             return true;
         }
-        return onCraft(recipe as RecipeName);
+        return onCraft(recipe as Item);
     }
-    const recipes = Object.entries(Recipes).filter(
+    const recipes = Object.entries(Items)
+    .filter(
+        ([, v]) => (v as ItemInfoCraftable).ingredients?.length
+    ).filter(
         ([, v]) => (v.story ?? []).every((s) => state.story[s])
     ).filter(
-        ([, v]) => !(v as RecipeInterface).waypoint || !state.story[(v as RecipeInterface).waypoint]
+        ([, v]) => !(v as ItemInfoInterface).waypoint || !state.story[(v as ItemInfoInterface).waypoint]
     ).map(
-        ([k, v]) => `${k}\n${v.description}\n${v.ingredients.map((r) => ` - ${r.item} x ${r.count}`).join("\n")}`
+        ([k]) => {
+            const item = Items[k as Item] as ItemInfoCraftable & ItemInfoBase;
+            return [k, item.description, item.ingredients.map((r) => `${r.item}[${r.count}]`).join(",")];
+        }
     );
-    print(`
-CRAFTING
-=========
-
-Usage: "crafting <recipe>"
-
-${recipes?.length ? "- Recipes -\n\n" + recipes.join("\n\n") : " - No recipes available -"}
-`);
-
+    printHeader("Crafting");
+    print(`Usage: "crafting <recipe>"`);
+    printTable(recipes, ["Name", "Description", "Recipe"], " | ");
     return true;
 };
 
-export const command_Exec = (raw: string) => {
-    raw = `
-    # COMMENT
-    START:
-    JEQ M_1 5 START
-    JEQ sausage bacon STARTY
-    `;
-    const script = new Script(raw);
-
-    console.log(script);
+export const command_Exec = (_: Entity, name: string) => {
+    if (!state.scripts[name]) {
+        printError(`Unknown script ${name}`);
+        return true;
+    }
     return true;
 }
 
-const commandHelp: Record<ActionType, string> = {
-    "MINE":     "mine <n=1>      - Activate drill <n> times.",
-    "MOVE":     "move <n=1>      - Move <n> in facing direction.",
-    "RECHARGE": "recharge <n?>   - Recharge entity battery <n> units. HOME ONLY.",
-    "ROTATE":   "rotate <-3|3=1> - Rotate 90 degrees CW <n> or CCW <-n>.",
-    "UNLOAD":   "unload          - Move entity inventory to storage. HOME ONLY."
-};
+export const command_Clear = () => {
+    if (output) {
+        output.innerHTML = "";
+    }
+}
+
+

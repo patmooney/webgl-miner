@@ -4,36 +4,11 @@ import * as csl from "./console";
 import { HISTORY_MAX } from "./constants";
 
 let dragStart: Vec2D | undefined;
-let canvas = document.getElementById("c");
 const input = document.querySelector('#control_console input');
 
 let historyIdx = HISTORY_MAX;
 
-export const initMouse = () => {
-    canvas?.addEventListener("mousedown", (e: Event) => {
-        dragStart = [(e as MouseEvent).clientX, (e as MouseEvent).clientY];
-    });
-    canvas?.addEventListener("mousemove", (e: Event) => {
-        if (dragStart) {
-            state.isFollowing = undefined;
-            let coords = [(e as MouseEvent).clientX, (e as MouseEvent).clientY];
-            const zoom = state.zoom + (0 - MIN_ZOOM)
-            const ratio = 0.6 + (zoom * 0.125);
-            const xMove = (coords[0] - (dragStart?.[0] ?? 0)) * ratio;
-            const yMove = (coords[1] - (dragStart?.[1] ?? 0)) * ratio;
-            state.camera[0] = state.camera[0] - xMove;
-            state.camera[1] = state.camera[1] + yMove;
-            dragStart = coords as Vec2D;
-        }
-    });
-    canvas?.addEventListener("mouseup", () => dragStart = undefined);
-    canvas?.addEventListener("mouseout", () => dragStart = undefined);
-
-    canvas?.addEventListener("wheel", (e) => {
-        const deltaY = (e as WheelEvent).deltaY;
-        state.setZoom(state.zoom + (deltaY > 0 ? 1 : -1));
-    });
-
+export const init = () => {
     input?.addEventListener("keyup", (e) => {
         const key = (e as KeyboardEvent).key;
         const val = (e.target as HTMLInputElement).value;
@@ -66,6 +41,34 @@ export const initMouse = () => {
 
     document.querySelector("#nav > div:first-of-type")?.addEventListener("click", (e) => onNav(e.target as HTMLDivElement, "control_console"));
 };
+
+export const initCanvas = () => {
+    let canvas = document.getElementById("c");
+    canvas?.addEventListener("mousedown", (e: Event) => {
+        dragStart = [(e as MouseEvent).clientX, (e as MouseEvent).clientY];
+    });
+    canvas?.addEventListener("mousemove", (e: Event) => {
+        if (dragStart) {
+            state.isFollowing = undefined;
+            let coords = [(e as MouseEvent).clientX, (e as MouseEvent).clientY];
+            const zoom = state.zoom + (0 - MIN_ZOOM)
+            const ratio = 0.6 + (zoom * 0.125);
+            const xMove = (coords[0] - (dragStart?.[0] ?? 0)) * ratio;
+            const yMove = (coords[1] - (dragStart?.[1] ?? 0)) * ratio;
+            state.camera[0] = state.camera[0] - xMove;
+            state.camera[1] = state.camera[1] + yMove;
+            dragStart = coords as Vec2D;
+        }
+    });
+    canvas?.addEventListener("mouseup", () => dragStart = undefined);
+    canvas?.addEventListener("mouseout", () => dragStart = undefined);
+
+    canvas?.addEventListener("wheel", (e) => {
+        const deltaY = (e as WheelEvent).deltaY;
+        state.setZoom(state.zoom + (deltaY > 0 ? 1 : -1));
+    });
+}
+
 
 export const onNav = (link: HTMLDivElement, control: string) => {
     Array.from(document.querySelectorAll('div#context > div')).forEach(

@@ -5,12 +5,11 @@ import { coordToTile, distanceFromCenter, getNeighbours, getTileAt, TILE_DROP, T
 import { state } from "../state";
 
 export const BATTERY_COST = 2;
-const DAMAGE = 1;
-const MINE_TIME_MS = 2000;
+const MINE_TIME_MS = 2200;
 
 export const command = function(this: Entity, action: Action) {
     if (!action.isStarted) {
-        action.timeEnd = Date.now() + (MINE_TIME_MS / this.drillSpeed);
+        action.timeEnd = Date.now() + (MINE_TIME_MS - (this.drillSpeed * 200));
         action.start();
     }
     if (action.timeEnd! > Date.now()) {
@@ -21,19 +20,21 @@ export const command = function(this: Entity, action: Action) {
     if (tile.type === TILE_TYPE.ROCK || tile.type === TILE_TYPE.ORE) {
 
         let durability = tile.durability * TILE_DURABILITY[tile.tile];
-        durability -= DAMAGE;
+        durability -= this.drillPower;
         const dist = distanceFromCenter(tile);
 
-        const drops = TILE_DROP[tile.tile as keyof typeof TILE_DROP] ?? [];
-        for (let drop of drops) {
-            let chance = drop.chance
-                ? drop.chance
-                : (drop.baseChance ?? 0) * (dist * 0.2);
-            while(chance > 0) {
-                if (Math.random() <= chance) {
-                    this.inventory.add(drop.item);
+        for (let i = 0; i < this.drillPower; i++) {
+            const drops = TILE_DROP[tile.tile as keyof typeof TILE_DROP] ?? [];
+            for (let drop of drops) {
+                let chance = drop.chance
+                    ? drop.chance
+                    : (drop.baseChance ?? 0) * (dist * 0.2);
+                while(chance > 0) {
+                    if (Math.random() <= chance) {
+                        this.inventory.add(drop.item);
+                    }
+                    chance -= 1;
                 }
-                chance -= 1;
             }
         }
 

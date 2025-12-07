@@ -5,24 +5,24 @@ import { tileW, size, ANGLE_TO_RAD, type Angle } from "./constants";
 import { runAction } from "./commands/index";
 import { Inventory } from "./invent";
 import { printError, printWarning } from "./console";
-import { ModuleStats, type Item } from "./story";
+import { Items, type Item, type ItemInfoModule } from "./story";
 import type { EntityGraphics } from "./graphics/entity";
 
 // BLOCK TYPES
 type Vec2D = [number, number];
 
-export type EntityType = "MINER";
-
 export interface IEntityStats {
     drillSpeed: number;
+    drillPower: number;
     battery: number;
     speed: number;
     inventorySize: number;
+    rechargeSpeed: number;
 }
 
 export class Entity implements IEntityStats {
     id: number;
-    type: EntityType;
+    name: string;
 
     gfx: EntityGraphics;
 
@@ -38,6 +38,8 @@ export class Entity implements IEntityStats {
     drillSpeed: number;
     battery: number;
     maxBattery: number;
+    rechargeSpeed: number;
+    drillPower: number;
 
     target: Vec2D | undefined;
     targetR: Angle | undefined;
@@ -46,20 +48,22 @@ export class Entity implements IEntityStats {
 
     modules: Item[];
 
-    constructor(gfx: EntityGraphics, id: number, type: EntityType, actions: ActionType[] = ["MOVE", "ROTATE"], modules?: Item[]) {
+    constructor(gfx: EntityGraphics, id: number, name: string, actions: ActionType[] = ["MOVE", "ROTATE"], modules?: Item[]) {
         this.gfx = gfx;
         this.id = id;
         this.coords = [Math.round((size / 2) * tileW) - (tileW / 2), Math.round((size / 2) * tileW) - (tileW / 2)];
         this.rotation[0] = Math.sin(this.rad);
         this.rotation[1] = Math.cos(this.rad);
         this.actions = actions;
-        this.type = type;
+        this.name = name;
 
         this.maxBattery = 0;
         this.battery = this.maxBattery;
         this.speed = 0;
         this.drillSpeed = 0;
         this.inventorySize = 0;
+        this.rechargeSpeed = 0;
+        this.drillPower = 0;
         this.inventory = new Inventory(undefined, this.inventorySize);
         this.modules = modules ?? [];
     }
@@ -70,12 +74,12 @@ export class Entity implements IEntityStats {
     }
 
     installModule(name: Item): boolean {
-        const mod = ModuleStats[name];
-        if (!mod) {
+        const info = Items[name] as ItemInfoModule;
+        if (!info) {
             return false;
         }
-        if (this.modules.find((installed) => ModuleStats[installed]?.type === mod.type)) {
-            // can't have two moduels of same type ... for now
+        if (this.modules.find((installed) => (Items[installed] as ItemInfoModule).moduleType === info.moduleType)) {
+            // can't have two modules of same type ... for now
             return false;
         }
         this.modules.push(name);
@@ -88,12 +92,17 @@ export class Entity implements IEntityStats {
         this.drillSpeed = 0;
         this.maxBattery = 0;
         this.inventorySize = 0;
+        this.actions = [];
         this.modules.forEach((m) => {
-            const stats = ModuleStats[m]?.stats;
+            const info = Items[m] as ItemInfoModule;
+            const stats = info.stats;
             this.speed += stats?.speed ?? 0;
             this.maxBattery += stats?.battery ?? 0;
             this.drillSpeed += stats?.drillSpeed ?? 0;
             this.inventorySize += stats?.inventorySize ?? 0;
+            this.rechargeSpeed += stats?.rechargeSpeed ?? 0;
+            this.drillPower += stats?.drillPower ?? 0;
+            this.actions.push(...(info.actionType ?? []));
         });
         this.inventory.limit = this.inventorySize;
     }

@@ -27,7 +27,7 @@ export const command = function(this: Entity, action: Action) {
         action?.start();
     }
 
-    const moveSpeed = baseSpeed;//this.speed * baseSpeed;
+    const moveSpeed = this.speed * baseSpeed;
 
     let delta: Vec2D | undefined;
     if (this.target) {

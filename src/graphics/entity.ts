@@ -122,7 +122,6 @@ export class EntityGraphics {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindVertexArray(null);
-        console.log("ok?");
     }
 
     render(gl: WebGL2RenderingContext, entity: Entity, camera: Vec2D) {

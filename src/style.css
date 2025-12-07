@@ -1,18 +1,30 @@
 body {
+    background-color: black;
     font-family: courier;
 }
+
 canvas#c {
-    width: 800px;
+    width: 1000px;
+    height: 0px;
+    transition: height 0.5s ease-out;
+    overflow: hidden;
+    border: solid 1px #333;
 }
 
 div.container {
     margin: 10px auto;
-    width: 800px;
+    width: 1000px;
 }
 
 div.control {
     display: flex;
     flex-direction: row;
+}
+
+div.canvas-container {
+    display: flex;
+    align-items: center;
+    height: 600px;
 }
 
 div#context {
@@ -116,6 +128,10 @@ div#output > p.important {
     color: white;
 }
 
+div#output > p.header {
+    background-color: #2b882b;
+}
+
 div#output > p.log {
     background-color: white;
     color: black;
@@ -135,7 +151,7 @@ div.bang {
     display: flex;
     width: 100%;
     box-sizing: border-box;
-    border-top: solid 1px white;
+    border-top: solid 1px #333;
     color: #55ff55;
     font-weight: 500;
     padding: .5rem;
@@ -173,4 +189,16 @@ div.items-center {
 
 div.flex-wrap {
     flex-wrap: wrap;
+}
+
+p.bold {
+    font-weight: bold;
+}
+
+p.white {
+    color: white;
+}
+
+p.black {
+    color: black;
 }
