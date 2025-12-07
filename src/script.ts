@@ -1,5 +1,8 @@
+import { Action, ACTION_COMPLETE_EVENT } from "./actions";
 import type { Entity } from "./entity";
+import { ScriptCommands } from "./script/commands";
 import { isLabel, parse, type LineType, type Memory, type ValidationType } from "./script/validation";
+import { state } from "./state";
 
 // comments start with #
 
@@ -19,35 +22,64 @@ export class Script {
     }
 }
 
+const EXEC_TIME = 500;
+
 export class ScriptExecutor {
     script: Script;
     entity: Entity;
-    lineIdx: number | undefined;
-
+    lineIdx: number = 0;
+    actions: string[];
     memory: number[];
+    execTime: number | undefined;
 
     constructor(e: Entity, s: Script) {
         this.entity = e;
         this.script = s;
         this.memory = [];
+        this.actions = [];
+        state.actions.hook.addEventListener(ACTION_COMPLETE_EVENT, (e: Event) => {
+            const action: Action = (e as CustomEvent).detail;
+            this.actions = this.actions.filter((a) => a !== action.id);
+        });
     }
-    run(lineN = 0): void {
-        if (lineN >= this.script.lines.length) {
+    run(): void {
+        if (this.execTime && this.execTime < Date.now()) {
+            // Not ready to run yet
             return;
         }
-        const [cmd] = this.script.lines[lineN];
-        if (isLabel(cmd)) {
-            return this.run(lineN + 1);
+        if (this.actions.length) {
+            // Awaiting actions
+            this.execTime = Date.now() + EXEC_TIME;
+            return;
         }
-        this.lineIdx = lineN;
-        return;
+        if (this.lineIdx >= this.script.lines.length) {
+            // End of script
+            return;
+        }
+
+        const [cmd, args] = this.script.lines[this.lineIdx];
+        if (isLabel(cmd)) {
+            // Ignore label lines
+            this.lineIdx++;
+            return this.run();
+        }
+
+        ScriptCommands[cmd](this, args);
+
+        this.lineIdx++;
+    }
+    navigateTo(lineNumber: number) {
+        this.lineIdx = lineNumber;
+    }
+    awaitActions(actions: string[]) {
+        this.actions.push(...actions);
     }
     getMemory(mem: Memory) {
         const add = parseInt(mem.replace(/[^\d]+/, ""));
         if (add) {
             return this.memory[add];
         }
-        return undefined;
+        return 0;
     }
     putMemory(mem: Memory, val: number) {
         if (!isNaN(val)) {

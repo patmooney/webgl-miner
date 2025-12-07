@@ -4,7 +4,7 @@ import { Entity } from "./entity";
 import type { EntityGraphics } from "./graphics/entity";
 import { Inventory } from "./invent";
 import type { Tile } from "./map";
-import type { Script } from "./script";
+import type { Script, ScriptExecutor } from "./script";
 import type { Item, WayPoint } from "./story";
 import { clamp } from "./utils/maths";
 import type { Vec2D } from "./world";
@@ -24,6 +24,7 @@ class State {
     inventory: Inventory;
     isFollowing?: number;
     entities: Entity[] = [];
+    executors: ScriptExecutor[] = [];
     story: { [key in WayPoint]?: boolean } = {};
     history: string[] = [];
     onStory?: (waypoint: WayPoint) => void;

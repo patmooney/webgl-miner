@@ -6,7 +6,6 @@ import { World } from '../world';
 import { FPS, size, tileW } from '../constants';
 import { initMap } from '../map';
 import { EntityGraphics } from '../graphics/entity';
-import { Script } from '../script';
 
 let RUNNING = false;
 
@@ -20,12 +19,6 @@ const loop = async (gl: WebGL2RenderingContext) => {
     state.entityGfx = entityGraphics;
 
     state.camera = [((size/2) - 11.5) * tileW, ((size/2) - 7) * tileW];
-    state.scripts["test"] = new Script(`
-        START:
-            MOVE 1
-            MINE 10
-            JMP START
-    `);
 
     initCanvas();
 
@@ -42,6 +35,9 @@ const loop = async (gl: WebGL2RenderingContext) => {
         }
         await new Promise<void>((finishRender) => requestAnimationFrame(() => {
             const actions = state.actions.getActions();
+            for (let s of state.executors) {
+                s.run();
+            }
             for (let e of state.entities) {
                 const action = actions.find((a) => a.entityId === e.id);
                 e.update(action);
