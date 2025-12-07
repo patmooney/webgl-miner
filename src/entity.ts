@@ -48,6 +48,14 @@ export class Entity implements IEntityStats {
 
     modules: Item[];
 
+    getSave() {
+        return {
+            ...this,
+            gfx: undefined,
+        }
+    }
+
+
     constructor(gfx: EntityGraphics, id: number, name: string, actions: ActionType[] = ["MOVE", "ROTATE"], modules?: Item[]) {
         this.gfx = gfx;
         this.id = id;
@@ -126,4 +134,5 @@ export class Entity implements IEntityStats {
     render(gl: WebGL2RenderingContext, camera: Vec2D) {
         this.gfx.render(gl, this, camera);
     }
+
 }

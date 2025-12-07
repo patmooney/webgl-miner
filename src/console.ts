@@ -7,7 +7,7 @@ import { onCraft, type Item, Items, type ItemInfoModule, type ItemInfoCraftable,
 const output = document.querySelector('#control_console div#output');
 
 type commandsType = "list" | "storage" | "deploy" | "select" | "selected" | "commands" | "inventory" |
-    "battery" | "cancel" | "halt" | "modules" | "focus" | "exec" | "install";
+    "battery" | "cancel" | "halt" | "modules" | "focus" | "exec" | "install" | "save";
 type commandGroup = "Manage" | "Entity";
 
 const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
@@ -147,7 +147,7 @@ const entityCommand = (cmd: string, values: string[]): boolean | undefined => {
     const [value] = values;
 
     const addAction = (actionType: ActionType) => {
-        const intVal = parseInt(value ?? 1);
+        const intVal = parseInt(value ?? 0);
         const action = state.actions.addAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal });
         if (actionType === "MOVE" || actionType === "ROTATE" || actionType === "MINE") {
             // OK the value for these is how many times to repeat
@@ -177,6 +177,8 @@ const metaCommand = (cmd: string, values: string[]): boolean | undefined => {
         case "crafting": return command_Crafting(value);
         case "selected": command_Selected(); return true;
         case "dev_spawn": return command_DEV_SPAWN();
+        case "save": command_Save(); return true;
+        case "load": command_Load(); return true;
     };
 
     if (entityCommands.includes(cmd)) {
@@ -386,4 +388,17 @@ export const command_Clear = () => {
     }
 }
 
+export const command_Save = () => {
+    printWarning("Game saving...");
+    window.localStorage.setItem("save", btoa(JSON.stringify(state.getSave())));
+};
 
+export const command_Load = () => {
+    const save = window.localStorage.getItem("save");
+    if (save) {
+        command_Clear();
+        printWarning("Game loaded...");
+        const raw = JSON.parse(atob(save));
+        state.onLoad(raw);
+    }
+};

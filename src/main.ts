@@ -47,6 +47,11 @@ Useful commands: storage, deploy
     state.inventory.hook = onStorage;
     state.onStory = onStory;
     state.onDeploy = onDeploy;
+
+    csl.command_Load();
+    setInterval(() => {
+        csl.command_Save();
+    }, 20_000)
 };
 
 const delay = (timeMs: number) => {

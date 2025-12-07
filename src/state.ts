@@ -1,6 +1,6 @@
-import { Actions } from "./actions";
+import { Actions, Action } from "./actions";
 import { HISTORY_MAX, tileW } from "./constants";
-import type { Entity } from "./entity";
+import { Entity } from "./entity";
 import type { EntityGraphics } from "./graphics/entity";
 import { Inventory } from "./invent";
 import type { Script } from "./script";
@@ -32,6 +32,60 @@ class State {
     lights: Float32Array;
 
     entityHook: EventTarget;
+
+    getSave() {
+        return {
+            ...this,
+            gl: undefined,
+            entityGfx: undefined,
+            entities: this.entities.map((e) => e.getSave()),
+            lights: []
+        }
+    }
+    onLoad(save: Partial<State>) {
+        Object.assign(this, {
+            camera: save.camera ?? this.camera,
+            zoom: save.zoom ?? this.zoom,
+            selectedEntity: save.selectedEntity ?? this.selectedEntity,
+            isFollowing: save.isFollowing ?? this.isFollowing,
+            story: save.story ?? this.story,
+            history: save.history ?? this.history,
+            scripts: save.scripts ?? this.scripts
+        });
+        if (this.entityGfx) {
+            this.entities = save.entities?.map((raw) => {
+                const e = new Entity(this.entityGfx!, raw.id, raw.name, raw.actions, raw.modules);
+                Object.assign(e, raw);
+                e.balanceModules();
+                return e;
+            }) ?? [];
+        }
+        if (this.actions && save.actions) {
+            this.actions.stack = save.actions.stack.map(
+                (a) => {
+                    const action = new Action(
+                        a.type, {
+                            delta: a.delta,
+                            value: a.value,
+                            timeEnd: a.timeEnd,
+                            entityId: a.entityId
+                        }, a.isSilent, a.parentId
+                    );
+                    action.id = a.id;
+                    action.isComplete = a.isComplete;
+                    action.isStarted = a.isStarted;
+                    action.shouldCancel = a.shouldCancel;
+                    return action;
+                }
+            );
+        }
+        console.log(this.actions);
+        if (this.inventory) {
+            Object.assign(this.inventory, save.inventory);
+        }
+        this.updateLights();
+    }
+
 
     constructor(actions = new Actions(), inventory = new Inventory(), onStory?: (waypoint: WayPoint) => void) {
         this.lights = new Float32Array(16 * 3).fill(0);
