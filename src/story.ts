@@ -1,8 +1,10 @@
-import { printImportant } from "./console";
+import * as csl from "./console";
+import { init as initGfx } from "./graphics/main";
 import { state } from "./state";
 import * as controlInterface from "./control.interface";
 import { Entity, type IEntityStats } from "./entity";
 import type { ActionType } from "./actions";
+import { IS_DEV } from "./constants";
 
 export type WayPoint =
     "STORAGE_FIRST" |
@@ -247,7 +249,7 @@ export const onStorage = (item: Item, count: number) => {
 export const onDeploy = (_: Item, name?: string) => {
     if (!state.story.DEPLOY_FIRST) {
         state.addWaypoint("DEPLOY_FIRST");
-        printImportant(`An automation requires modules in order to be useful.
+        csl.printImportant(`An automation requires modules in order to be useful.
 Useful commands: list, select, equip`);
     }
 
@@ -291,28 +293,28 @@ export const onCraft = (item: Item): boolean => {
 export const onStory = (waypoint: WayPoint) => {
     switch (waypoint) {
         case "STORAGE_FIRST":
-            printImportant(`Crafting Unlocked
+            csl.printImportant(`Crafting Unlocked
 see command "crafting" for more information`);
             break;
         case "IRON_FIRST": 
-            printImportant(`New recipes available`);
+            csl.printImportant(`New recipes available`);
             break;
         case "CARBON_FIRST":
             if (state.story.COPPER_FIRST) {
-                printImportant(`New recipes available`);
+                csl.printImportant(`New recipes available`);
             }
             break;
         case "COPPER_FIRST":
             if (state.story.CARBON_FIRST) {
-                printImportant(`New recipes available`);
+                csl.printImportant(`New recipes available`);
             }
             break;
         case "INTERFACE_CONTROL_INTERFACE":
-            printImportant(`Control interface installed`);
+            csl.printImportant(`Control interface installed`);
             addControllInterface();
             break;
         case "INTERFACE_AUTOMATION_INTERFACE":
-            printImportant(`Automation interface installed`);
+            csl.printImportant(`Automation interface installed`);
             addControllInterface();
             break;
     }
@@ -320,4 +322,47 @@ see command "crafting" for more information`);
 
 const addControllInterface = () => {
     controlInterface.init();
+}
+
+export const start = async () => {
+    csl.printImportant("Welcome...");
+    await delay(500);
+    csl.print("Initialising environment...");
+    await delay(500);
+    csl.printWarning("INIT CONNECTION...");
+    await delay(100);
+    csl.printWarning("INIT CAMERA...");
+    await delay(500);
+    initGfx();
+    await delay(1500);
+    csl.printWarning("INIT COMPLETE");
+    await delay(1500);
+    csl.command_Clear();
+    csl.printImportant(`Your first task will be to deploy and construct a mining automation
+========
+Type "help" to get started
+Useful commands: storage, deploy`);
+
+    const initialStory: WayPoint[] = [];
+    const initialStorage: [Item, number][] = [
+        ["deployable_automation_hull", 1],
+        ["module_basic_drill", 1],
+        ["module_basic_motor", 1],
+        ["module_basic_store", 1],
+        ["module_basic_battery", 1],
+    ];
+
+    initialStorage.forEach(([i, c]) => state.inventory.add(i, c));
+    initialStory.forEach((w) => state.addWaypoint(w));
+
+    state.inventory.hook = onStorage;
+    state.onStory = onStory;
+    state.onDeploy = onDeploy;
+};
+
+const delay = (timeMs: number) => {
+    if (IS_DEV) {
+        return;
+    }
+    return new Promise((res) => setTimeout(res, timeMs));
 }

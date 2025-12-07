@@ -49,6 +49,7 @@ export const getTileType = (tile: number): TILE => {
 };
 
 export type Tile = {
+    tileN: number;
     coord: Vec2D;
     tile: TILE;
     type: number;
@@ -103,7 +104,7 @@ export const getTileAt = (coord: Vec2D): Tile => {
     if (tile === undefined) {
         throw new Error(`Invalid tile ${col} / ${row}`);
     }
-    return { coord, tile: getTileType(tile), type: tile, durability }; 
+    return { coord, tile: getTileType(tile), type: tile, durability, tileN }; 
 };
 
 export const coordToTile = (coord: Vec2D): Vec2D => {
@@ -145,8 +146,7 @@ export const getMap = (): Float32Array => {
 
 export const updateMap = (update: Tile) => {
     const map = getMap();
-    const [col, row] = update.coord;
-    const tileN = (row * size) + col;
+    const tileN = update.tileN;
     map[tileN * TILE_STORE_SIZE] = update.type;
     map[(tileN * TILE_STORE_SIZE) + 1] = update.durability;
 }

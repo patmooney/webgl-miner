@@ -69,11 +69,13 @@ export class Action implements IAction {
 export class Actions {
     stack: Action[];
     mapUpdates: Tile[];
+    mapChanges: Tile[];
     hook: EventTarget;
 
     constructor() {
         this.stack = [];
         this.mapUpdates = [];
+        this.mapChanges = [];
         this.hook = new EventTarget();
     }
     getActions() {
@@ -117,6 +119,7 @@ export class Actions {
     }
     addMapUpdate(update: Tile) {
         this.mapUpdates.push(update);
+        this.mapChanges.push(update);
         updateMap(update);
     }
 }

@@ -1,13 +1,16 @@
 import type { Action, ActionType } from "./actions";
 import { CONSOLE_LINES, IS_DEV } from "./constants";
 import { Entity } from "./entity";
+import { end } from "./graphics/main";
+import { coordToTile, getTileAt, TILE_TYPE } from "./map";
 import { state } from "./state";
-import { onCraft, type Item, Items, type ItemInfoModule, type ItemInfoCraftable, type ItemInfoInterface, type ItemInfoBase, type Item_Module } from "./story";
+import { onCraft, type Item, Items, type ItemInfoModule, type ItemInfoCraftable, type ItemInfoInterface, type ItemInfoBase, type Item_Module, start } from "./story";
+import { clearTexMap } from "./utils/webgl";
 
 const output = document.querySelector('#control_console div#output');
 
-type commandsType = "list" | "storage" | "deploy" | "select" | "selected" | "commands" | "inventory" |
-    "battery" | "cancel" | "halt" | "modules" | "focus" | "exec" | "install" | "save";
+type commandsType = "list" | "storage" | "deploy" | "select" | "selected" | "commands" | "inventory" | "uninstall" |
+    "actions" | "battery" | "cancel" | "halt" | "modules" | "focus" | "exec" | "install" | "save";
 type commandGroup = "Manage" | "Entity";
 
 const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
@@ -25,6 +28,8 @@ const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
         ["modules","List currently installed modules and stats.", ""],
         ["exec","Execute a named script.", ""],
         ["install","Install a module from the main storage", "str"],
+        ["uninstall", "Remove an installed module", "str"],
+        ["actions", "Display queue of actions", ""],
         ["focus","Move camera and follow selected entity.", ""],
         ["cancel","Cancel current action where possible.", ""],
         ["halt","Cancel all queued actions where possible.", ""],
@@ -179,6 +184,7 @@ const metaCommand = (cmd: string, values: string[]): boolean | undefined => {
         case "dev_spawn": return command_DEV_SPAWN();
         case "save": command_Save(); return true;
         case "load": command_Load(); return true;
+        case "reset": command_Reset(); return true;
     };
 
     if (entityCommands.includes(cmd)) {
@@ -192,8 +198,10 @@ const metaCommand = (cmd: string, values: string[]): boolean | undefined => {
                 case "halt": command_Halt(selected, value); return true;
                 case "focus": command_Focus(selected, value); return true;
                 case "modules": command_Modules(selected, value); return true;
+                case "actions": command_Actions(selected); return true;
                 case "exec": return command_Exec(selected, value);
                 case "install": return command_Install(selected, value);
+                case "uninstall": return command_Uninstall(selected, value);
             }
         } else {
             printError(`No entity selected.`);
@@ -294,7 +302,8 @@ export const command_Modules = (selected: Entity, _: string) => {
         ["Name", "Label", "Quality", "Type"],
         " | "
     );
-    print(`[ Movement: ${selected.speed} ] [ Drill: ${selected.drillSpeed} ] [ Battery: ${selected.battery} / ${selected.maxBattery} ]`);
+    print(`[ Movement: ${selected.speed} ] [ Battery: ${selected.battery} / ${selected.maxBattery} ] [ Charge Speed: ${selected.rechargeSpeed} ]`);
+    print (`[ Drill Power: ${selected.drillPower} ] [ Drill Speed: ${selected.drillSpeed} ]`);
 };
 
 
@@ -311,6 +320,12 @@ export const command_Halt = (selected: Entity, _: string) => {
 };
 
 export const command_Install = (selected: Entity, mod: string) => {
+    const tileCoord = coordToTile(selected.coords);
+    const tile = getTileAt(tileCoord);
+    if (tile.type !== TILE_TYPE.HOME) {
+        printError(`Unable to install modules here`);
+        return true;
+    }
     if (!Items[mod as Item_Module]) {
         printError(`Unknown or missing module - "${mod}"`);
     }
@@ -321,6 +336,21 @@ export const command_Install = (selected: Entity, mod: string) => {
         printError(`Unable to install ${mod}, slot already used or incompatible`);
         state.inventory.add(mod as Item, 1);
     }
+    return true;
+};
+
+export const command_Uninstall = (selected: Entity, mod: string) => {
+    const tileCoord = coordToTile(selected.coords);
+    const tile = getTileAt(tileCoord);
+    if (tile.type !== TILE_TYPE.HOME) {
+        printError(`Unable to uninstall modules here`);
+        return true;
+    }
+    if (!selected.uninstallModule(mod as Item_Module)) {
+        printError(`No module called "${mod}" is installed on this automation`);
+        return true;
+    }
+    state.inventory.add(mod as Item, 1);
     return true;
 };
 
@@ -389,16 +419,36 @@ export const command_Clear = () => {
 }
 
 export const command_Save = () => {
-    printWarning("Game saving...");
     window.localStorage.setItem("save", btoa(JSON.stringify(state.getSave())));
+    printWarning("Game saved.");
+};
+
+export const command_Reset = async () => {
+    printWarning("RESETTING GAME");
+    window.localStorage.setItem("save", "");
+    clearTexMap();
+    state.reset();
+    await end();
+    command_Clear();
+    start();
 };
 
 export const command_Load = () => {
     const save = window.localStorage.getItem("save");
-    if (save) {
-        command_Clear();
-        printWarning("Game loaded...");
+    if (save?.length) {
         const raw = JSON.parse(atob(save));
-        state.onLoad(raw);
+        if (Object.keys(raw.story ?? {}).length) {
+            command_Clear();
+            state.onLoad(raw);
+            printWarning("Game loaded.");
+        }
     }
+};
+
+export const command_Actions = (selected: Entity) => {
+    const actions = state.actions.getActions().filter((a) => a.entityId === selected.id).filter((a) => !a.isSilent);
+    printHeader("Actions");
+    actions.forEach((a) => {
+        print(` - ${a.type} [${a.value}]`);
+    });
 };

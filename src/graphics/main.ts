@@ -8,6 +8,8 @@ import { initMap } from '../map';
 import { EntityGraphics } from '../graphics/entity';
 import { Script } from '../script';
 
+let RUNNING = false;
+
 const loop = async (gl: WebGL2RenderingContext) => {
     initMap();
     const w = new World();
@@ -33,7 +35,7 @@ const loop = async (gl: WebGL2RenderingContext) => {
 
     const timePerFrame = 1000 / FPS;
     let t = Date.now();
-    while(true) {
+    while(RUNNING) {
         let nextFrame = t+timePerFrame;
         if (Date.now() < nextFrame) {
             await new Promise((res) => setTimeout(res, 10));
@@ -83,7 +85,14 @@ export const init = () => {
             if (!gl) {
                 return;
             }
+            RUNNING = true;
             loop(gl);
         }, { once: true })
     }, 1000);
+};
+
+export const end = () => {
+    document.getElementById("c")?.remove();
+    RUNNING = false;
+    return new Promise((res) => setTimeout(res, 500));
 };

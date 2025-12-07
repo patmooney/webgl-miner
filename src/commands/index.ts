@@ -39,6 +39,7 @@ export const runAction = function(this: Entity, action: Action) {
     if (!action.isStarted) {
         if (command.BATTERY_COST) {
             if (this.battery < command.BATTERY_COST) {
+                action.cancel();
                 return;
             }
             this.battery = Math.max(0, this.battery - command.BATTERY_COST);

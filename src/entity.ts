@@ -51,6 +51,7 @@ export class Entity implements IEntityStats {
     getSave() {
         return {
             ...this,
+            inventory: this.inventory.inventory,
             gfx: undefined,
         }
     }
@@ -95,9 +96,20 @@ export class Entity implements IEntityStats {
         return true;
     }
 
+    uninstallModule(name: Item): boolean {
+        if (!this.modules.includes(name)) {
+            return false;
+        }
+        this.modules = this.modules.filter((m) => m !== name);
+        this.balanceModules();
+        return true;
+    }
+
     balanceModules() {
         this.speed = 0;
         this.drillSpeed = 0;
+        this.rechargeSpeed = 0;
+        this.drillPower = 0;
         this.maxBattery = 0;
         this.inventorySize = 0;
         this.actions = [];

@@ -137,6 +137,10 @@ export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement, multiplier?
 
 let texMap: Record<string, WebGLTexture> = {};
 
+export const clearTexMap = () => {
+    texMap = {};
+}
+
 export const loadTexture = async (gl: WebGL2RenderingContext, img: string): Promise<WebGLTexture> => {
     if (texMap[img]) {
         return texMap[img];

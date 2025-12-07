@@ -3,6 +3,7 @@ import { HISTORY_MAX, tileW } from "./constants";
 import { Entity } from "./entity";
 import type { EntityGraphics } from "./graphics/entity";
 import { Inventory } from "./invent";
+import type { Tile } from "./map";
 import type { Script } from "./script";
 import type { Item, WayPoint } from "./story";
 import { clamp } from "./utils/maths";
@@ -34,15 +35,22 @@ class State {
     entityHook: EventTarget;
 
     getSave() {
+        const actions: Partial<Actions> = {
+            stack: this.actions.stack,
+            mapUpdates: this.actions.mapUpdates,
+            mapChanges: consolidateMapChanges(this.actions.mapChanges)
+        };
         return {
             ...this,
+            inventory: this.inventory.inventory,
             gl: undefined,
             entityGfx: undefined,
             entities: this.entities.map((e) => e.getSave()),
-            lights: []
+            lights: [],
+            actions: actions
         }
     }
-    onLoad(save: Partial<State>) {
+    onLoad(save: Partial<State> & { inventory: { [key in Item]?: number } }) {
         Object.assign(this, {
             camera: save.camera ?? this.camera,
             zoom: save.zoom ?? this.zoom,
@@ -50,12 +58,15 @@ class State {
             isFollowing: save.isFollowing ?? this.isFollowing,
             story: save.story ?? this.story,
             history: save.history ?? this.history,
-            scripts: save.scripts ?? this.scripts
+            scripts: save.scripts ?? this.scripts,
         });
+        this.inventory.inventory = save.inventory ?? this.inventory.inventory;
         if (this.entityGfx) {
             this.entities = save.entities?.map((raw) => {
                 const e = new Entity(this.entityGfx!, raw.id, raw.name, raw.actions, raw.modules);
                 Object.assign(e, raw);
+                e.inventory = new Inventory();
+                e.inventory.inventory = raw.inventory as { [key in Item]?: number } ?? {};
                 e.balanceModules();
                 return e;
             }) ?? [];
@@ -78,14 +89,27 @@ class State {
                     return action;
                 }
             );
+            this.actions.mapChanges = save.actions.mapChanges;
         }
-        console.log(this.actions);
         if (this.inventory) {
             Object.assign(this.inventory, save.inventory);
         }
+        this.actions.mapChanges.forEach(
+            (change) => this.actions.mapUpdates.push(change)
+        );
         this.updateLights();
     }
 
+    reset() {
+        this.gl = undefined;
+        this.actions = new Actions();
+        this.entities = [];
+        this.inventory = new Inventory();
+        this.lights = new Float32Array(16 * 3).fill(0);
+        this.entityHook = new EventTarget();
+        this.story = {};
+        this.scripts = {};
+    }
 
     constructor(actions = new Actions(), inventory = new Inventory(), onStory?: (waypoint: WayPoint) => void) {
         this.lights = new Float32Array(16 * 3).fill(0);
@@ -158,3 +182,12 @@ class State {
 }
 
 export const state = new State();
+
+const consolidateMapChanges = (mapChanges: Tile[]): Tile[] => {
+    return Object.values(mapChanges.reduce<{ [key: number]: Tile }>(
+        (acc, change) => {
+            acc[change.tileN] = change;
+            return acc;
+        }, {}
+    ));
+};
