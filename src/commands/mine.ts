@@ -1,7 +1,7 @@
 import type { Entity } from "../entity";
 import type { Vec2D, Angle } from "../constants";
 import type { Action } from "../actions";
-import { coordToTile, distanceFromCenter, getNeighbours, getTileAt, TILE_DROP, TILE_DURABILITY, TILE_TYPE, type Tile } from "../map";
+import { coordToTile, distanceFromCenter, getNeighbours, getTileAt, TILE_DROP, TILE_DURABILITY, TILE_TYPE, type TILE, type Tile } from "../map";
 import { state } from "../state";
 
 export const BATTERY_COST = 2;
@@ -40,15 +40,17 @@ export const command = function(this: Entity, action: Action) {
 
         if (durability <= 0) { // tile is done
             const neighbours = getNeighbours(tile.coord);
-            state.actions.addMapUpdate({ ...tile, type: TILE_TYPE.FLOOR, durability: 1 });
+            state.actions.addMapUpdate({ ...tile, type: TILE_TYPE.FLOOR, durability: 1, tile: "FLOOR" });
             for (let n of neighbours) {
                 if (n.type === TILE_TYPE.SHADOW) {
                     let type: number = TILE_TYPE.ROCK;
+                    let tile: TILE = "ROCK";
                     if (Math.random() < (0.01 * dist)) {
                         // chance that new tile is ore is 5%
                         type = TILE_TYPE.ORE;
+                        tile = "ORE";
                     }
-                    state.actions.addMapUpdate({ ...n, type, durability: 1 });
+                    state.actions.addMapUpdate({ ...n, type, durability: 1, tile });
                 }
             }
         } else {

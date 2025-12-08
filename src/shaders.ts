@@ -24,33 +24,71 @@ out float b_type;
 out float durability;
 out float atlas_w;
 
+bool get_solid(float x, float y) {
+  ivec2 pos = ivec2(int(x), int(y));
+  float t = texelFetch(u_data, pos, 0).b;
+  return t == 1.0;
+}
+
+bool is_blocked (vec2 pos1, vec2 pos2, int dist) {
+  float x1 = pos1.x;
+  float y1 = pos1.y;
+  float x2 = pos2.x;
+  float y2 = pos2.y;
+
+  float dx = abs(x1 - x2);
+  float dy = abs(y1 - y2);
+  float sx = sign(x1 - x2);
+  float sy = sign(y1 - y2);
+  float err = dx - dy;
+
+  if (dx < 2.0 && dy < 2.0) {
+    return false;
+  }
+
+  for (int i = 0; i < dist; i++) {
+    if (x1 == x2 && y1 == y2) {
+      return false;
+    }
+    float err2 = 2.0 * err;
+    if (err2 > -dy) {
+      err -= dy;
+      x2 += sx;
+    }
+    if (err2 < dx) {
+      err += dx;
+      y2 += sy;
+    }
+    if (get_solid(x2, y2) == true) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // all shaders have a main function
 void main() {
-  float rRow = floor(float(gl_InstanceID / tileX));
-  float rCol = mod(float(gl_InstanceID), float(tileX));
-  int row = int(rRow);
-  int col = int(rCol);
-
-  float xOffset = float(col * (tileW));
-  float yOffset = float(row * (tileW));
-
-  vec2 instPos = vec2(a_position);
-  instPos.x += xOffset;
-  instPos.y += yOffset;
+  int row = int(floor(float(gl_InstanceID) / float(tileX)));
+  int col = int(mod(float(gl_InstanceID), float(tileX)));
 
   bright = 0.1;
   for (int i = 0; i < 16; i++) {
     if (u_light[i].z > 0.0) {
-      vec2 l = u_light[i].xy + vec2(tileW, tileW);
-      float d = distance(l.xy, instPos);
-      if (d < u_light[i].z) {
+      vec2 l = u_light[i].xy;
+      float d = distance(l.xy, vec2(col, row));
+      if (d < u_light[i].z && !is_blocked(l.xy, vec2(col, row), int(u_light[i].z))) {
         bright += min(0.8, 1.0 - (d / u_light[i].z));
       }
     }
   }
 
-  instPos.x += camera.x;
-  instPos.y += camera.y;
+  float xOffset = float(col * (tileW));
+  float yOffset = float(row * (tileW));
+
+  vec2 instPos = vec2(a_position);
+  instPos.x += xOffset + camera.x;
+  instPos.y += yOffset + camera.y;
 
   // convert the position from pixels to 0.0 to 1.0
   vec2 zeroToOne = instPos / u_resolution;
@@ -63,13 +101,14 @@ void main() {
 
   gl_Position = vec4(clipSpace, 0, 1);
 
-  vec2 tile = texelFetch(u_data, ivec2(row, col), 0).rg;
+  vec2 tile = texelFetch(u_data, ivec2(col, row), 0).rg;
 
   b_type = tile.r;
   durability = tile.g;
   v_texcoord = a_texcoord;
   atlas_w = u_atlas_w;
 }
+
 `;
 
 export const fragmentShaderSource = `#version 300 es

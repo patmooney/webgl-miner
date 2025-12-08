@@ -4,7 +4,7 @@ import { HISTORY_MAX, tileW } from "./constants";
 import { Entity } from "./entity";
 import type { EntityGraphics } from "./graphics/entity";
 import { Inventory } from "./invent";
-import { resetMap, updateMap, type Tile } from "./map";
+import { coordToTile, resetMap, updateMap, type Tile } from "./map";
 import type { Script, ScriptExecutor } from "./script";
 import type { Item, WayPoint } from "./story";
 import { clamp } from "./utils/maths";
@@ -174,10 +174,10 @@ class State {
     updateLights() {
         const lights = new Float32Array(16 * 3).fill(0);
         for (let idx = 0; idx < state.entities.length; idx++) {
-            const [x, y] = state.entities[idx].coords;
-            lights[idx*3] = x;
-            lights[(idx*3)+1] = y;
-            lights[(idx*3)+2] = 5 * tileW;
+            const [row, col] = coordToTile(state.entities[idx].coords);
+            lights[idx*3] = row;
+            lights[(idx*3)+1] = col;
+            lights[(idx*3)+2] = 5;
         }
         this.lights = lights;
     }

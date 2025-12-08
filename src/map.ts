@@ -62,31 +62,31 @@ export const initMap = (): Float32Array => {
     const lHome = (size / 2) - 2;
     const uHome = (size / 2) + 2;
 
-    /** Initial map state is everywhere shadow and rock except a small square in the center **/
 
+
+    /** Initial map state is everywhere shadow and rock except a small square in the center **/
     let map: number[] = [];
     for (let idx = 0; idx < (size * size); idx++) {
         const col = idx % size;
         const row = Math.floor(idx / size);
         if (row > lHome && row < uHome && col > lHome && col < uHome) {
-            map.push(TILE_TYPE.HOME, 1);
+            map.push(TILE_TYPE.HOME, 1, 0);
             continue;
         }
         if (row > lStart && row < uStart && col > lStart && col < uStart) {
-            map.push(TILE_TYPE.FLOOR, 1);
+            map.push(TILE_TYPE.FLOOR, 1, 0);
             continue;
         }
         if ((row === lStart || row === uStart) && (col >= lStart && col <= uStart)) {
-            map.push(TILE_TYPE.ROCK, 1);
+            map.push(TILE_TYPE.ROCK, 1, 1);
             continue;
         }
         if ((col === lStart || col === uStart) && (row >= lStart && row <= uStart)) {
-            map.push(TILE_TYPE.ROCK, 1);
+            map.push(TILE_TYPE.ROCK, 1, 1);
             continue;
         }
-        map.push(TILE_TYPE.SHADOW, 1);
+        map.push(TILE_TYPE.SHADOW, 1, 1);
     }
-
     return new Float32Array(map);
 }
 
@@ -154,4 +154,5 @@ export const updateMap = (update: Tile) => {
     const tileN = update.tileN;
     map[tileN * TILE_STORE_SIZE] = update.type;
     map[(tileN * TILE_STORE_SIZE) + 1] = update.durability;
+    map[(tileN * TILE_STORE_SIZE) + 2] = TILE_NAVIGATE[update.tile] ? 0 : 1;
 }

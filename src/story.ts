@@ -4,8 +4,8 @@ import { state } from "./state";
 import * as controlInterface from "./control.interface";
 import { Entity, type IEntityStats } from "./entity";
 import type { ActionType } from "./actions";
-import { IS_DEV } from "./constants";
 import { Script } from "./script";
+import { IS_DEV } from "./constants";
 
 export type WayPoint =
     "STORAGE_FIRST" |
@@ -366,7 +366,12 @@ Useful commands: storage, deploy`);
             RUN rotate 2
             RUN recharge
     `));
-            
+
+    if (IS_DEV && state.entityGfx) {
+        const e = new Entity(state.entityGfx, 0, "twat", [], ["module_dev"]);
+        e.init();
+        state.entities.push(e);
+    }
 
     state.inventory.hook = onStorage;
     state.onStory = onStory;
@@ -374,9 +379,6 @@ Useful commands: storage, deploy`);
 };
 
 const delay = (timeMs: number) => {
-    if (IS_DEV) {
-        return;
-    }
     return new Promise((res) => setTimeout(res, timeMs));
 }
 

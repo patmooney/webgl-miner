@@ -5,7 +5,7 @@ import * as webglUtils from "./utils/webgl.js";
 
 import t from "./assets/atlas.png";
 import { SATW, size, tileW } from './constants.js';
-import { getMap, type Tile } from './map.js';
+import { getMap, TILE_NAVIGATE, type Tile } from './map.js';
 import { state } from './state.js';
 
 // BLOCK TYPES
@@ -130,11 +130,13 @@ export class World {
         gl.bindTexture(gl.TEXTURE_2D, this.blockTex);
 
         const bTypes = getMap();
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 
         gl.texImage2D(
-            gl.TEXTURE_2D, 0, gl.RG32F, size, size, 0, gl.RG,
+            gl.TEXTURE_2D, 0, gl.RGB32F, size, size, 0, gl.RGB,
             gl.FLOAT, bTypes
         );
+
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
@@ -149,9 +151,10 @@ export class World {
             gl.bindTexture(gl.TEXTURE_2D, this.blockTex);
             updates.forEach(
                 (update) => {
+                    const patch = new Float32Array([update.type, update.durability, TILE_NAVIGATE[update.tile] ? 0.0 : 1.0]);
                     gl.texSubImage2D(
-                        gl.TEXTURE_2D, 0, update.coord[1], update.coord[0], 1, 1,
-                        gl.RG, gl.FLOAT, new Float32Array([update.type, update.durability])
+                        gl.TEXTURE_2D, 0, update.coord[0], update.coord[1], 1, 1,
+                        gl.RGB, gl.FLOAT, patch
                     )
                 }
             );
