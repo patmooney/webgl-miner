@@ -28,9 +28,11 @@ export type Item_Deployable = "deployable_automation_hull";
 export type Item_Interface = "interface_automation" | "interface_control" | "interface_smelting";
 export type Item = Item_Resource | Item_Module | Item_Deployable | Item_Interface;
 
-export type ModuleType = "engine" | "battery" | "drill" | "navigation" | "store";
+export type ModuleType = "engine" | "battery" | "device" | "navigation" | "store";
+export type DeviceType = "drill" | "visual_scanner";
 
 export type ItemInfoBase = {
+    name: Item;
     story?: WayPoint[];
     description: string;
     label: string;
@@ -49,6 +51,7 @@ export type ItemInfoModule = ItemInfoBase & ItemInfoCraftable & {
     quality: ItemQuality;
     stats: Partial<IEntityStats>;
     moduleType: ModuleType;
+    deviceType?: DeviceType;
     actionType?: ActionType[];
 };
 
@@ -67,32 +70,38 @@ export type ItemInfoType = ItemInfoModule | ItemInfoInterface | ItemInfoResource
 export const Items: Record<Item, ItemInfoType> = {
     // RESOURCE
     stone: {
+        name: "stone",
         type: "RESOURCE",
         description: "",
         label: "Stone"
     },
     iron: {
+        name: "iron",
         type: "RESOURCE",
         description: "",
         label: "Iron Ore",
     },
     carbon: {
+        name: "carbon",
         type: "RESOURCE",
         description: "",
         label: "Carbon"
     },
     copper: {
+        name: "copper",
         type: "RESOURCE",
         description: "",
         label: "Copper Ore",
     },
     coal: {
+        name: "coal",
         type: "RESOURCE",
         description: "",
         label: "Coal"
     },
     // INTERFACE
     interface_control: {
+        name: "interface_control",
         ingredients: [{ item: "stone", count: 50 }, { item: "iron", count: 10 }],
         story: ["IRON_FIRST"],
         description: "Extra control interface for manual remote instruction",
@@ -101,6 +110,7 @@ export const Items: Record<Item, ItemInfoType> = {
         label: "Control Interface"
     },
     interface_automation: {
+        name: "interface_automation",
         ingredients: [
             { item: "stone", count: 50 },
             { item: "iron", count: 10 },
@@ -114,6 +124,7 @@ export const Items: Record<Item, ItemInfoType> = {
         label: "Automation Interface"
     },
     interface_smelting: {
+        name: "interface_smelting",
         ingredients: [
             { item: "iron", count: 50 },
             { item: "stone", count: 200 }
@@ -127,6 +138,7 @@ export const Items: Record<Item, ItemInfoType> = {
 
     // MODULE
     module_visual_scanner: {
+        name: "module_visual_scanner",
         ingredients: [{ item: "iron", count: 10 }],
         story: ["IRON_FIRST"],
         description: "Visually assess one tile in front",
@@ -134,9 +146,11 @@ export const Items: Record<Item, ItemInfoType> = {
         label: "Visual Scanner (Module)",
         quality: "BASIC",
         moduleType: "navigation",
+        deviceType: "visual_scanner",
         stats: {},
     },
     module_basic_battery: {
+        name: "module_basic_battery",
         ingredients: [
             { item: "stone", count: 20 },
             { item: "iron", count: 10 }
@@ -151,6 +165,7 @@ export const Items: Record<Item, ItemInfoType> = {
         actionType: ["RECHARGE"]
     },
     module_basic_drill: {
+        name: "module_basic_drill",
         ingredients: [
             { item: "iron", count: 30 }
         ],
@@ -159,11 +174,13 @@ export const Items: Record<Item, ItemInfoType> = {
         type: "MODULE",
         label: "Basic Drill (Module)",
         quality: "BASIC",
-        moduleType: "drill",
+        moduleType: "device",
+        deviceType: "drill",
         stats: { drillSpeed: 1, drillPower: 1 },
-        actionType: ["MINE"]
+        actionType: ["DEVICE"]
     },
     module_basic_motor: {
+        name: "module_basic_motor",
         ingredients: [
             { item: "stone", count: 20 },
             { item: "iron", count: 50 }
@@ -178,6 +195,7 @@ export const Items: Record<Item, ItemInfoType> = {
         actionType: ["MOVE", "ROTATE"]
     },
     module_basic_store: {
+        name: "module_basic_store",
         ingredients: [
             { item: "stone", count: 20 },
             { item: "iron", count: 20 }
@@ -192,6 +210,7 @@ export const Items: Record<Item, ItemInfoType> = {
         actionType: ["UNLOAD"]
     },
     module_home_navigation: {
+        name: "module_home_navigation",
         ingredients: [
             { item: "carbon", count: 10 },
             { item: "copper", count: 10 }
@@ -206,6 +225,7 @@ export const Items: Record<Item, ItemInfoType> = {
     },
 
     module_dev: {
+        name: "module_dev",
         type: "MODULE",
         label: "DEV DEV DEV",
         quality: "BASIC",
@@ -213,11 +233,13 @@ export const Items: Record<Item, ItemInfoType> = {
         moduleType: "engine",
         stats: { battery: 10_000, drillSpeed: 10, speed: 10, inventorySize: 10_000, rechargeSpeed: 10, drillPower: 10 },
         ingredients: [],
-        actionType: ["ROTATE", "MOVE", "MINE", "UNLOAD", "RECHARGE"]
+        actionType: ["ROTATE", "MOVE", "DEVICE", "UNLOAD", "RECHARGE"],
+        deviceType: "drill"
     },
 
     // DEPLOYABLE
     deployable_automation_hull: {
+        name: "deployable_automation_hull",
         ingredients: [
             { item: "iron", count: 10 }
         ],

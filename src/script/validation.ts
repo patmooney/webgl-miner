@@ -19,9 +19,9 @@ export type Label = `${string}:`;
 export type Memory = `M_${number}`;
 export type LineType = [Logic | Label, string[]];
 
-export type ValidationType = "number_memory" | "label" | "memory" | "number";
+export type ValidationType = "number_memory" | "label" | "memory" | "number" | "any" | "memory_or_null";
 export const validation: Record<Syntax, ValidationType[] | undefined> = {
-    "RUN": undefined,
+    "RUN": ["any", "any", "memory_or_null"],
     "JMP": ["label"],
     "PUT": ["number_memory", "memory"],
     "JEQ": ["number_memory", "number_memory", "label"],
@@ -45,7 +45,9 @@ export const validationFn: Record<ValidationType, (ctx: ValidationContext, arg: 
     "label": (ctx: ValidationContext, arg: string) => !!ctx.labels?.includes(arg),
     "memory": (_: ValidationContext, arg: string) => memoryRe.test(arg),
     "number_memory": (_: ValidationContext, arg: string) => memoryRe.test(arg) || /^\d+/.test(arg),
-    "number": (_: ValidationContext, arg: string) => /^\d+/.test(arg)
+    "number": (_: ValidationContext, arg: string) => /^\d+/.test(arg),
+    "any": () => true,
+    "memory_or_null": (_: ValidationContext, arg: string) => memoryRe.test(arg) || arg === undefined || arg === ""
 }
 
 export const isLabel = (l: Label | Logic): l is Label => labelRe.test(l);
@@ -71,9 +73,6 @@ export const parse = (script: string): [LineType[], [number,ErrorType,[string, V
     const labelsMap: Record<string, number> = {};
     const unknownErrs = lines.reduce<[number, ErrorType][]>(
         (acc, [cmd], idx) => {
-            if (cmd === "RUN") {
-                return acc;
-            }
             if (!validation[cmd as Syntax] && !labelRe.test(cmd)) {
                 acc.push([idx, "UNKNOWN"]);
                 return acc;

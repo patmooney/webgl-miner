@@ -2,7 +2,7 @@ import type { Action } from "../actions";
 import { printAction } from "../console";
 import type { Entity } from "../entity";
 
-import * as command_Mine from "./mine";
+import * as command_Device from "./device";
 import * as command_Move from "./move";
 import * as command_Rotate from "./rotate";
 import * as command_Unload from "./unload";
@@ -24,8 +24,8 @@ export const runAction = function(this: Entity, action: Action) {
             command = command_Move; break;
         case "ROTATE":
             command = command_Rotate; break;
-        case "MINE":
-            command = command_Mine; break;
+        case "DEVICE":
+            command = command_Device; break;
         case "UNLOAD":
             command = command_Unload; break;
         case "RECHARGE":

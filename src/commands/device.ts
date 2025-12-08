@@ -3,11 +3,28 @@ import type { Vec2D, Angle } from "../constants";
 import type { Action } from "../actions";
 import { coordToTile, distanceFromCenter, getNeighbours, getTileAt, TILE_DROP, TILE_DURABILITY, TILE_TYPE, type TILE, type Tile } from "../map";
 import { state } from "../state";
+import { Items, type Item, type ItemInfoModule } from "../story";
+import { printError } from "../console";
 
 export const BATTERY_COST = 2;
 const MINE_TIME_MS = 2200;
+const SCAN_TIME_MS = 2000;
 
 export const command = function(this: Entity, action: Action) {
+    const devices = this.modules.filter((mod) => (Items[mod as Item] as ItemInfoModule).moduleType === "device");
+    const device = devices.at(action.value!);
+    const deviceType = device ? (Items[device] as ItemInfoModule).deviceType : undefined;
+    switch (deviceType) {
+        case "drill": return drill.call(this, action);
+        case "visual_scanner": return visual_scan.call(this, action);
+        default:
+            printError(`Entity [${this.id}] - Unknown device [${action.value}]`);
+            action.complete();
+            return;
+    }
+}
+
+const drill = function(this: Entity, action: Action) {
     if (!action.isStarted) {
         action.timeEnd = Date.now() + (MINE_TIME_MS - (this.drillSpeed * 200));
         action.start();
@@ -57,6 +74,18 @@ export const command = function(this: Entity, action: Action) {
             state.actions.addMapUpdate({ ...tile, durability: durability / TILE_DURABILITY[tile.tile] });
         }
     }
+};
+
+const visual_scan = function(this: Entity, action: Action) {
+    if (!action.isStarted) {
+        action.timeEnd = Date.now() + SCAN_TIME_MS;
+        action.start();
+    }
+    if (action.timeEnd! > Date.now()) {
+        return;
+    }
+    const tile = getFacingTile(coordToTile(this.coords), this.angle, 1);
+    action.complete(tile.type);
 };
 
 export const getFacingTile = (tile: Vec2D, angle: Angle, distance = 1): Tile => {

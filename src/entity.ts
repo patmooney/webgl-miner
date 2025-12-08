@@ -40,6 +40,7 @@ export class Entity implements IEntityStats {
     maxBattery: number;
     rechargeSpeed: number;
     drillPower: number;
+    deviceSlots: number = 1;
 
     target: Vec2D | undefined;
     targetR: Angle | undefined;
@@ -87,7 +88,12 @@ export class Entity implements IEntityStats {
         if (!info) {
             return false;
         }
-        if (this.modules.find((installed) => (Items[installed] as ItemInfoModule).moduleType === info.moduleType)) {
+        const alreadyInstalled = this.modules.filter((installed) => (Items[installed] as ItemInfoModule).moduleType === info.moduleType);
+        if (info.moduleType === "device" && alreadyInstalled.length >= this.deviceSlots) {
+            // can't have more devices than is available
+            return false;
+        }
+        else if (alreadyInstalled.length) {
             // can't have two modules of same type ... for now
             return false;
         }

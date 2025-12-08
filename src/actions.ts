@@ -2,7 +2,7 @@ import { size } from "./constants";
 import { updateMap, type Tile } from "./map";
 import type { Vec2D } from "./world";
 
-export type ActionType = "ROTATE" | "MOVE" | "MINE" | "UNLOAD" | "RECHARGE";
+export type ActionType = "ROTATE" | "MOVE" | "DEVICE" | "UNLOAD" | "RECHARGE";
 
 export const ACTION_ADD_EVENT = "ACTION_ADD";
 export const ACTION_COMPLETE_EVENT = "ACTION_REMOVE";
@@ -26,6 +26,7 @@ export class Action implements IAction {
     timeEnd?: number;
     entityId: number;
     parentId?: string;
+    result?: number;
     
     isSilent: boolean = false;
     isComplete: boolean = false;
@@ -51,7 +52,8 @@ export class Action implements IAction {
         }
     }
 
-    complete() {
+    complete(result?: number) {
+        this.result = result;
         this.isComplete = true;
     }
     start() {

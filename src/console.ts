@@ -12,7 +12,7 @@ import { clearTexMap } from "./utils/webgl";
 const output = document.querySelector('#control_console div#output');
 
 type commandsType = "list" | "storage" | "deploy" | "select" | "selected" | "commands" | "inventory" | "uninstall" |
-    "actions" | "battery" | "cancel" | "halt" | "modules" | "focus" | "exec" | "install" | "save" | "edit";
+    "actions" | "battery" | "cancel" | "halt" | "modules" | "focus" | "exec" | "install" | "save" | "edit" | "devices";
 type commandGroup = "Manage" | "Entity";
 
 const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
@@ -29,6 +29,7 @@ const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
         ["inventory","Show current entity inventory.", ""],
         ["battery","Show current entity battery value.", ""],
         ["modules","List currently installed modules and stats.", ""],
+        ["devices","List currently installed devices.", ""],
         ["exec","Execute a named script.", ""],
         ["install","Install a module from the main storage.", "str"],
         ["uninstall", "Remove an installed module.", "str"],
@@ -40,7 +41,7 @@ const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
 };
 
 const CommandHelp: Record<ActionType, [string, string, string]> = {
-    "MINE":     ["mine", "Activate drill <n> times.", "int=1"],
+    "DEVICE":   ["device", "Activate device <n>", "int=0"],
     "MOVE":     ["move", "Move <n> in facing direction.", "int=1"],
     "RECHARGE": ["recharge", "Recharge entity battery <n> units. HOME ONLY.", "int?"],
     "ROTATE":   ["rotate", "Rotate 90 degrees CW <n> or CCW <-n>.", "int [-3, 3]"],
@@ -157,7 +158,7 @@ export const entityCommand = (entityId: number | undefined, cmd: string, values:
         let actions: string[] = [];
         const action = state.actions.addAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal });
         actions.push(action.id);
-        if (actionType === "MOVE" || actionType === "ROTATE" || actionType === "MINE") {
+        if (actionType === "MOVE" || actionType === "ROTATE" || actionType === "DEVICE") {
             // OK the value for these is how many times to repeat
             for (let i = 1; i < (action.value ?? intVal); i++) {
                 const subAction = state.actions.addSilentAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal }, action.id)
@@ -203,6 +204,7 @@ const metaCommand = (cmd: string, values: string[]): boolean | undefined => {
                 case "halt": command_Halt(selected, value); return true;
                 case "focus": command_Focus(selected, value); return true;
                 case "modules": command_Modules(selected, value); return true;
+                case "devices": command_Devices(selected, value); return true;
                 case "actions": command_Actions(selected); return true;
                 case "exec": return command_Exec(selected, value);
                 case "install": return command_Install(selected, value);
@@ -311,6 +313,15 @@ export const command_Modules = (selected: Entity, _: string) => {
     print (`[ Drill Power: ${selected.drillPower} ] [ Drill Speed: ${selected.drillSpeed} ]`);
 };
 
+export const command_Devices = (selected: Entity, _: string) => {
+    printHeader("Installed Devices");
+    const devices = selected.modules.map((name) => Items[name] as ItemInfoModule).filter((mod) => mod.moduleType === "device");
+    printTable(
+        devices.map((device, idx) => ([`[${idx}]`, device.name, device.label, device.quality, device.deviceType ?? ""])),
+        ["ID", "Name", "Label", "Quality", "Type"],
+        " | "
+    );
+};
 
 export const command_Cancel = (selected: Entity, _: string) => {
     const action = state.actions.cancelOneForEntity(selected.id);
@@ -370,7 +381,7 @@ export const command_DEV_SPAWN = (): boolean | undefined => {
     const e =  new Entity(
         state.entityGfx,
         state.entities.length, "DEVBOT",
-        ["ROTATE", "MOVE", "MINE", "UNLOAD", "RECHARGE"],
+        ["ROTATE", "MOVE", "DEVICE", "UNLOAD", "RECHARGE"],
         ["module_dev"]
     );
     e.init();
