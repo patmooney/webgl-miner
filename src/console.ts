@@ -160,7 +160,7 @@ export const entityCommand = (entityId: number | undefined, cmd: string, values:
         actions.push(action.id);
         if (actionType === "MOVE" || actionType === "ROTATE" || actionType === "DEVICE") {
             // OK the value for these is how many times to repeat
-            for (let i = 1; i < (action.value ?? intVal); i++) {
+            for (let i = 1; i < Math.abs(action.value ?? intVal); i++) {
                 const subAction = state.actions.addSilentAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal }, action.id)
                 actions.push(subAction.id);
             }

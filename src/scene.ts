@@ -1,5 +1,10 @@
+import { size, tileW } from "./constants";
 import type { Entity } from "./entity";
+import { EntityGraphics } from "./graphics/entity";
+import { initCanvas } from "./input";
+import { initMap } from "./map";
 import { state } from "./state";
+import { World } from "./world";
 
 let updateI = 0;
 const UPDATE_CADENCE = 100;
@@ -24,6 +29,25 @@ export const update = (gl: WebGL2RenderingContext) => {
     }
     state.world?.update(gl, state.actions.getMapUpdates());
 };
+
+export const initScene = async (gl: WebGL2RenderingContext) => {
+    initMap();
+    state.world = new World();
+    state.gl = gl;
+
+    const entityGraphics = new EntityGraphics();
+    await entityGraphics.initGraphics(gl);
+    state.entityGfx = entityGraphics;
+
+    state.camera = [((size/2) - 11.5) * tileW, ((size/2) - 7) * tileW];
+
+    initCanvas();
+
+    await state.world.init(gl);
+
+    state.updateLights();
+};
+
 
 
 const getStatus = (entity: Entity) => {

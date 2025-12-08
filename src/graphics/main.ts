@@ -1,32 +1,12 @@
-import { initCanvas } from '../input';
 import { state } from '../state';
 import * as webglUtils from "../utils/webgl";
 
-import { World } from '../world';
-import { FPS, size, tileW } from '../constants';
-import { initMap } from '../map';
-import { EntityGraphics } from '../graphics/entity';
-import { update } from '../scene';
+import { FPS, IS_DEV } from '../constants';
+import { initScene, update } from '../scene';
 
 let RUNNING = false;
 
 const loop = async (gl: WebGL2RenderingContext) => {
-    initMap();
-    state.world = new World();
-    state.gl = gl;
-
-    const entityGraphics = new EntityGraphics();
-    await entityGraphics.initGraphics(gl);
-    state.entityGfx = entityGraphics;
-
-    state.camera = [((size/2) - 11.5) * tileW, ((size/2) - 7) * tileW];
-
-    initCanvas();
-
-    await state.world.init(gl);
-
-    state.updateLights();
-
     const timePerFrame = 1000 / FPS;
     let t = Date.now();
     while(RUNNING) {
@@ -64,21 +44,28 @@ export const init = () => {
     canvas.width = 1000;
     canvas.height = 600;
     canvas.style.backgroundColor = "#000";
+    canvas.style.transition = IS_DEV ? "height 10ms ease-out" : "height 0.5s ease-out";
     document.querySelector("div.container > div.canvas-container")?.prepend(canvas);
-    setTimeout(() => {
-        canvas.style.height = "600px";
-        canvas.addEventListener("transitionend", () => {
-            const gl = canvas.getContext("webgl2", { premultipliedAlpha: false });
-            canvas.style.border = "none";
-            gl?.getExtension("EXT_color_buffer_float");
+    return new Promise((initComplete) => {
+        setTimeout(() => {
+            canvas.style.height = "600px";
+            canvas.addEventListener("transitionend", async () => {
+                const gl = canvas.getContext("webgl2", { premultipliedAlpha: false });
+                canvas.style.border = "none";
 
-            if (!gl) {
-                return;
-            }
-            RUNNING = true;
-            loop(gl);
-        }, { once: true })
-    }, 1000);
+                if (!gl) {
+                    return;
+                }
+
+                RUNNING = true;
+                await initScene(gl);
+                initComplete(undefined);
+
+                gl.getExtension("EXT_color_buffer_float");
+                loop(gl);
+            }, { once: true })
+        }, 1000);
+    });
 };
 
 export const end = () => {

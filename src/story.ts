@@ -23,7 +23,7 @@ export type ItemQuality = "BASIC";
 
 export type Item_Resource = "stone" | "iron" | "carbon" | "copper" | "coal";
 export type Item_Module = "module_visual_scanner" | "module_basic_drill" | "module_basic_battery" | "module_basic_motor"  | "module_home_navigation" | "module_basic_store" |
-    "module_dev";
+    "module_dev" | "module_dev_drill";
 export type Item_Deployable = "deployable_automation_hull";
 export type Item_Interface = "interface_automation" | "interface_control" | "interface_smelting";
 export type Item = Item_Resource | Item_Module | Item_Deployable | Item_Interface;
@@ -237,6 +237,19 @@ export const Items: Record<Item, ItemInfoType> = {
         deviceType: "drill"
     },
 
+    module_dev_drill: {
+        name: "module_dev_drill",
+        type: "MODULE",
+        label: "DEV DEV DEV",
+        quality: "BASIC", 
+        description: "DEV DEV DEV",
+        moduleType: "device",
+        ingredients: [],
+        actionType: ["DEVICE"],
+        stats: {},
+        deviceType: "drill"
+    },
+
     // DEPLOYABLE
     deployable_automation_hull: {
         name: "deployable_automation_hull",
@@ -356,7 +369,7 @@ export const start = async () => {
     await delay(100);
     csl.printWarning("INIT CAMERA...");
     await delay(500);
-    initGfx();
+    await initGfx();
     await delay(1500);
     csl.printWarning("INIT COMPLETE");
     await delay(1500);
@@ -390,9 +403,10 @@ Useful commands: storage, deploy`);
     `));
 
     if (IS_DEV && state.entityGfx) {
-        const e = new Entity(state.entityGfx, 0, "twat", [], ["module_dev"]);
+        const e = new Entity(state.entityGfx, 0, "twat", [], ["module_dev", "module_dev_drill"]);
         e.init();
         state.entities.push(e);
+        state.updateLights();
     }
 
     state.inventory.hook = onStorage;
@@ -401,5 +415,8 @@ Useful commands: storage, deploy`);
 };
 
 const delay = (timeMs: number) => {
+    if (IS_DEV) {
+        return;
+    }
     return new Promise((res) => setTimeout(res, timeMs));
 }
