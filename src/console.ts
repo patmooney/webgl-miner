@@ -139,7 +139,7 @@ export const parseCmd = (val: string) => {
     if (isCommand === undefined) {
         printError("No entity selected!");
         return;
-    } else if (isCommand) {
+    } else if (isCommand?.length) {
         return;
     }
 
@@ -172,7 +172,7 @@ export const entityCommand = (entityId: number | undefined, cmd: string, values:
         return addAction(cmd.toUpperCase() as ActionType);
     }
 
-    return undefined;
+    return [];
 };
 
 const metaCommand = (cmd: string, values: string[]): boolean | undefined => {

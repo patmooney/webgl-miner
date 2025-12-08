@@ -45,10 +45,10 @@ export class Action implements IAction {
         this.parentId = parentId;
 
         if (this.type === "ROTATE") {
-            this.value = Math.max(Math.min(3, this.value ?? 1), -3);
+            this.value = Math.max(-3, Math.min(3, this.value || 1));
         }
         if (this.type === "MOVE") {
-            this.value = Math.max(0, Math.min(size, value ?? 0));
+            this.value = Math.max(0, Math.min(size, value || 0));
         }
     }
 
