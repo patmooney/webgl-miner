@@ -6,6 +6,9 @@ import * as csl from "./console";
 import { IS_DEV } from './constants';
 
 const run = async () => {
+    if (!IS_DEV) {
+        document.addEventListener("contextmenu", (e) => e.preventDefault());
+    }
     initInput();
     await story.start();
 

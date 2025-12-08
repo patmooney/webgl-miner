@@ -106,14 +106,14 @@ const bindButtons = (control: HTMLDivElement) => {
     });
     mine.addEventListener("click", () => {
         if (state.selectedEntity !== undefined) {
-            state.actions.addAction("MINE", { value: 0, entityId: state.selectedEntity });
+            state.actions.addAction("DEVICE", { value: 0, entityId: state.selectedEntity });
         }
     });
     mine5.addEventListener("click", () => {
         if (state.selectedEntity !== undefined) {
-            state.actions.addAction("MINE", { value: 5, entityId: state.selectedEntity });
+            state.actions.addAction("DEVICE", { value: 5, entityId: state.selectedEntity });
             for (let i = 1; i < 5; i++) {
-                state.actions.addSilentAction("MINE", { value: 1, entityId: state.selectedEntity });
+                state.actions.addSilentAction("DEVICE", { value: 1, entityId: state.selectedEntity });
             }
         }
     });
