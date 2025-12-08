@@ -1,4 +1,4 @@
-import { MIN_ZOOM, state } from "./state";
+import { MIN_ZOOM, state, type KeyboardBind } from "./state";
 import type { Vec2D } from "./world";
 import * as csl from "./console";
 import { HISTORY_MAX } from "./constants";
@@ -40,6 +40,15 @@ export const init = () => {
     (input as HTMLInputElement)?.focus();
 
     document.querySelector("#nav > div:first-of-type")?.addEventListener("click", (e) => onNav(e.target as HTMLDivElement, "control_console"));
+    document.addEventListener("keyup", (e) => {
+        if (document.activeElement === input) {
+            return;
+        }
+        const kb = state.keybinds.find((kb) => kb.key === e.key);
+        if (kb) {
+            csl.parseCmd(kb.exec);
+        }
+    });
 };
 
 export const initCanvas = () => {
@@ -80,3 +89,17 @@ export const onNav = (link: HTMLDivElement, control: string) => {
     document.getElementById(control)?.classList.remove("hidden");
     link.classList.add("active");
 }
+
+export const onKeybind = (exec: string) => {
+    setTimeout(() => {
+        csl.print(`Press a key to bind...`);
+        document.addEventListener("keyup", (e) => {
+            const kb: KeyboardBind = {
+                key: e.key,
+                exec
+            };
+            state.addKeybind(kb);
+            csl.print(`"${exec}" bound to ${kb.key}`);
+        }, { once: true });
+    }, 100);
+};

@@ -14,6 +14,11 @@ export const MAX_ZOOM = 10;
 export const MIN_ZOOM = -3;
 export const ENTITY_SELECTED_EVENT = "ENTITY_SELECTED";
 
+export type KeyboardBind = {
+    key: string;
+    exec: string;
+}
+
 class State {
     gl?: WebGL2RenderingContext;
     entityGfx?: EntityGraphics;
@@ -32,6 +37,8 @@ class State {
     onStory?: (waypoint: WayPoint) => void;
     onDeploy?: (item: Item, name?: string) => void;
     scripts: Record<string, Script>;
+
+    keybinds: KeyboardBind[];
 
     lights: Float32Array;
 
@@ -117,6 +124,7 @@ class State {
         this.entityHook = new EventTarget();
         this.story = {};
         this.scripts = {};
+        this.keybinds = [];
     }
 
     constructor(actions = new Actions(), inventory = new Inventory(), onStory?: (waypoint: WayPoint) => void) {
@@ -126,6 +134,7 @@ class State {
         this.onStory = onStory;
         this.entityHook = new EventTarget();
         this.scripts = {};
+        this.keybinds = [];
     }
     selectEntity(id: number) {
         if (this.focusEntity(id)) {
@@ -201,6 +210,13 @@ class State {
     }
     saveScript(s: Script) {
         this.scripts[s.name] = s;
+    }
+    addKeybind(keybind: KeyboardBind) {
+        const existingIdx = this.keybinds.findIndex((kb) => kb.key === keybind.key);
+        if (existingIdx >= 0) {
+            this.keybinds.splice(existingIdx, 1);
+        }
+        this.keybinds.push(keybind);
     }
 }
 

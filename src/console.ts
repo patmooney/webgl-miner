@@ -3,6 +3,7 @@ import { CONSOLE_LINES, IS_DEV } from "./constants";
 import { onEdit } from "./editor.interface";
 import { Entity } from "./entity";
 import { end } from "./graphics/main";
+import { onKeybind } from "./input";
 import { coordToTile, getTileAt, TILE_TYPE } from "./map";
 import { ScriptExecutor } from "./script";
 import { state } from "./state";
@@ -12,7 +13,8 @@ import { clearTexMap } from "./utils/webgl";
 const output = document.querySelector('#control_console div#output');
 
 type commandsType = "list" | "storage" | "deploy" | "select" | "selected" | "commands" | "inventory" | "uninstall" |
-    "actions" | "battery" | "cancel" | "halt" | "modules" | "focus" | "exec" | "install" | "save" | "edit" | "devices";
+    "actions" | "battery" | "cancel" | "halt" | "modules" | "focus" | "exec" | "install" | "save" | "edit" | "devices" |
+    "bind";
 type commandGroup = "Manage" | "Entity";
 
 const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
@@ -22,7 +24,8 @@ const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
         ["deploy", "Deploy from storage. Ex. deploy <deployable_name> <label>.", "str, str?"],
         ["select", "Select entity for control.", "int"],
         ["selected","Show currently selected entitiy.", ""],
-        ["edit", "Edit a script.", "str"]
+        ["edit", "Edit a script.", "str"],
+        ["bind", "Bind a key to a command Ex. bind <cmd> <args?>", "str"]
     ],
     Entity: [
         ["commands","List available commands for selected entity.", ""],
@@ -191,6 +194,7 @@ const metaCommand = (cmd: string, values: string[]): boolean | undefined => {
         case "load": command_Load(); return true;
         case "reset": command_Reset(); return true;
         case "edit": command_Edit(value); return true;
+        case "bind": command_Bind(values); return true;
     };
 
     if (entityCommands.includes(cmd)) {
@@ -343,15 +347,14 @@ export const command_Install = (selected: Entity, mod: string) => {
         printError(`Unable to install modules here`);
         return true;
     }
-    if (!Items[mod as Item_Module]) {
-        printError(`Unknown or missing module - "${mod}"`);
-    }
-    if (!state.inventory.remove(mod as Item, 1)) {
-        printError(`Unknown or missing module - "${mod}"`);
+    if (!Items[mod as Item_Module] || !state.inventory.remove(mod as Item, 1)) {
+        printError(`Unknown or module not in storage - "${mod}"`);
+        return true;
     }
     if (!selected.installModule(mod as Item_Module)) {
         printError(`Unable to install ${mod}, slot already used or incompatible`);
         state.inventory.add(mod as Item, 1);
+        return true;
     }
     return true;
 };
@@ -474,4 +477,8 @@ export const command_Actions = (selected: Entity) => {
 
 export const command_Edit = (name: string) => {
     onEdit(name);
+}
+
+export const command_Bind = (values: string[]) => {
+    onKeybind(values.join(" "));
 }
