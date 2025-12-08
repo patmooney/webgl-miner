@@ -6,12 +6,13 @@ import { World } from '../world';
 import { FPS, size, tileW } from '../constants';
 import { initMap } from '../map';
 import { EntityGraphics } from '../graphics/entity';
+import { update } from '../scene';
 
 let RUNNING = false;
 
 const loop = async (gl: WebGL2RenderingContext) => {
     initMap();
-    const w = new World();
+    state.world = new World();
     state.gl = gl;
 
     const entityGraphics = new EntityGraphics();
@@ -22,7 +23,7 @@ const loop = async (gl: WebGL2RenderingContext) => {
 
     initCanvas();
 
-    await w.init(gl);
+    await state.world.init(gl);
 
     state.updateLights();
 
@@ -33,14 +34,8 @@ const loop = async (gl: WebGL2RenderingContext) => {
         if (Date.now() < nextFrame) {
             await new Promise((res) => setTimeout(res, 10));
         }
+        update(gl);
         await new Promise<void>((finishRender) => requestAnimationFrame(() => {
-            const actions = state.actions.getActions();
-            state.runScripts();
-            for (let e of state.entities) {
-                const action = actions.find((a) => a.entityId === e.id);
-                e.update(action);
-            }
-            w.update(gl, state.actions.getMapUpdates())
 
             webglUtils.resizeCanvasToDisplaySize(gl.canvas as HTMLCanvasElement);
             // Tell WebGL how to convert from clip space to pixels
@@ -52,10 +47,11 @@ const loop = async (gl: WebGL2RenderingContext) => {
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-            w.render(gl, state.camera);
+            state.world?.render(gl, state.camera);
             for (let e of state.entities) {
                e.render(gl, state.camera);
             }
+
             finishRender();
         }));
         t = Date.now();

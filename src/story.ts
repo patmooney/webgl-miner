@@ -381,5 +381,3 @@ Useful commands: storage, deploy`);
 const delay = (timeMs: number) => {
     return new Promise((res) => setTimeout(res, timeMs));
 }
-
-

@@ -8,7 +8,7 @@ import { coordToTile, resetMap, updateMap, type Tile } from "./map";
 import type { Script, ScriptExecutor } from "./script";
 import type { Item, WayPoint } from "./story";
 import { clamp } from "./utils/maths";
-import type { Vec2D } from "./world";
+import type { Vec2D, World } from "./world";
 
 export const MAX_ZOOM = 10;
 export const MIN_ZOOM = -3;
@@ -18,6 +18,7 @@ class State {
     gl?: WebGL2RenderingContext;
     entityGfx?: EntityGraphics;
 
+    world: World | undefined;
     camera: Vec2D = [0, 0];
     actions: Actions;
     zoom: number = 0;
