@@ -23,8 +23,9 @@
               </div>
           </div>
           <div id="editor-container" class="editor_modal hidden">
-              <div class="flex-col gap">
+              <div class="flex-col gap grow">
                   <div id="editor-name"></div>
+                  <div class="flex-col hidden" id="editor-errors"></div>
                   <textarea id="editor"></textarea>
                   <div class="flex-row justified">
                       <button id="editor-save">Save</button>
@@ -32,6 +33,8 @@
                   </div>
               </div>
           </div>
+      </div>
+      </div>
       </div>
       <script type="module" src="/src/main.ts"></script>
   </body>

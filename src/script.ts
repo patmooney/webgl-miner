@@ -14,7 +14,7 @@ export class Script {
     name: string;
     lines: LineType[];
     content: string;
-    errors: [number, string, [string, ValidationType]?][];
+    errors: [number, string, [number, ValidationType]?][];
     labels: Record<string, number>;
     constructor(name: string, script: string) {
         const [lines, errors, labels] = parse(script);

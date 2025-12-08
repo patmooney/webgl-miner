@@ -49,6 +49,33 @@ div.editor_modal {
         background-color: black;
         color: #55ff55;
     }
+
+    & div#editor-errors {
+        flex-grow: 1;
+        background-color: black;
+        color: #55ff55;
+        & p {
+            margin: 0;
+            padding: 0;
+            cursor: help;
+            white-space: pre;
+        }
+        & p.is-error {
+            background-color: #AA3333;
+            & > span.mr {
+                margin-right: .5rem;
+            }
+            & > span.err-arg {
+                background-color: #FFFF00;
+                color: black;
+            }
+        }
+    }
+    & #editor-name {
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
 }
 
 div.control {
@@ -69,7 +96,7 @@ div#context {
     color: white;
 }
 
-div.hidden {
+.hidden {
     display: none !important;
 }
 
