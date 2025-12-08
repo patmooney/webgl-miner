@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WebGL Miner</title>
     <link rel="icon" href="data:image/png;base64,iVBORw0KGgo=">
-    <script type="module" crossorigin src="./assets/index-GhsRXCEm.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-Be-QqD21.css">
+    <script type="module" crossorigin src="./assets/index-BZJky17i.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CfZrsvX1.css">
   </head>
   <body>
       <div class="container">
+          <div id="status"></div>
           <div class="canvas-container"></div>
           <div class="control">
               <div id="context">
@@ -24,8 +25,9 @@
               </div>
           </div>
           <div id="editor-container" class="editor_modal hidden">
-              <div class="flex-col gap">
+              <div class="flex-col gap grow">
                   <div id="editor-name"></div>
+                  <div class="flex-col hidden" id="editor-errors"></div>
                   <textarea id="editor"></textarea>
                   <div class="flex-row justified">
                       <button id="editor-save">Save</button>
@@ -33,6 +35,8 @@
                   </div>
               </div>
           </div>
+      </div>
+      </div>
       </div>
   </body>
 </html>
