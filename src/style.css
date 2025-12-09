@@ -11,6 +11,20 @@ canvas#c {
     border: solid 1px #333;
 }
 
+div#welcome-modal {
+    background-color: black;
+    border: solid 1px #333;
+    position: absolute;
+    height: 100px;
+    width: 300px;
+    left: 50%;
+    top: 25%;
+    transform: translate(-50%, 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 div#status {
     top: 0;
     left: 0;

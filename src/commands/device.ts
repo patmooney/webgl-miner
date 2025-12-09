@@ -5,6 +5,7 @@ import { coordToTile, distanceFromCenter, getNeighbours, getTileAt, TILE_DROP, T
 import { state } from "../state";
 import { Items, type Item, type ItemInfoModule } from "../story";
 import { printError } from "../console";
+import { cameraCenterOffset } from "../scene";
 
 export const BATTERY_COST = 2;
 const MINE_TIME_MS = 2200;
@@ -27,7 +28,10 @@ export const command = function(this: Entity, action: Action) {
 const drill = function(this: Entity, action: Action) {
     if (!action.isStarted) {
         action.timeEnd = Date.now() + (MINE_TIME_MS - (this.drillSpeed * 200));
+        action.addSound("drill", cameraCenterOffset(this.coords));
         action.start();
+    } else {
+        action.moveSound(cameraCenterOffset(this.coords));
     }
     if (action.timeEnd! > Date.now()) {
         return;

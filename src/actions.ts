@@ -1,5 +1,6 @@
 import { size } from "./constants";
 import { updateMap, type Tile } from "./map";
+import { sound, type SoundType } from "./sound";
 import type { Vec2D } from "./world";
 
 export type ActionType = "ROTATE" | "MOVE" | "DEVICE" | "UNLOAD" | "RECHARGE";
@@ -27,12 +28,19 @@ export class Action implements IAction {
     entityId: number;
     parentId?: string;
     result?: number;
-    
+    state: Record<string, string | number> = {};
+
+    soundName?: SoundType;
+    soundId?: number;
+    continueSound?: boolean;
+
     isSilent: boolean = false;
     isComplete: boolean = false;
     isStarted: boolean = false;
     isCancelled: boolean = false;
     shouldCancel: boolean = false;
+
+    children?: Action[];
 
     constructor(type: ActionType, { delta, value, timeEnd, entityId }: IAction, isSilent = false, parentId?: string) {
         this.type = type;
@@ -55,6 +63,7 @@ export class Action implements IAction {
     complete(result?: number) {
         this.result = result;
         this.isComplete = true;
+        this.stopSound();
     }
     start() {
         this.isStarted = true;
@@ -65,6 +74,40 @@ export class Action implements IAction {
         } else {
             this.isCancelled = true;
         }
+        this.stopSound();
+    }
+    stopSound() {
+        if (!this.soundId || this.continueSound) {
+            return;
+        }
+        sound.stopSound(this.soundId, this.soundName!)
+    }
+    addSound(name: SoundType, pos: Vec2D) {
+        if (!this.soundId) {
+            this.soundName = name;
+            this.soundId = sound.play(name, pos);
+            if (this.children?.length) {
+                this.continueSound = true;
+                this.children = this.children.map(
+                    (a, idx, arr) => {
+                        a.soundId = this.soundId;
+                        a.soundName = this.soundName;
+                        // the last of the children should stop the sound
+                        a.continueSound = idx < (arr.length - 1);
+                        return a;
+                    }
+                );
+            }
+        }
+    }
+    moveSound(pos: Vec2D) {
+        if (this.soundName && this.soundId) {
+            sound.moveSound(this.soundId, this.soundName, pos);
+        }
+    }
+    addChildren(children: Action[]) {
+        this.children = children;
+        this.continueSound = false;
     }
 }
 

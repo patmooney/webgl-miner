@@ -403,7 +403,8 @@ Useful commands: storage, deploy`);
     `));
 
     if (IS_DEV && state.entityGfx) {
-        const e = new Entity(state.entityGfx, 0, "twat", [], ["module_dev", "module_dev_drill"]);
+        //const e = new Entity(state.entityGfx, 0, "twat", [], ["module_dev", "module_dev_drill"]);
+        const e = new Entity(state.entityGfx, 0, "twat", [], ["module_basic_drill", "module_basic_motor", "module_basic_store", "module_basic_battery", "module_visual_scanner"]);
         e.init();
         state.entities.push(e);
         state.updateLights();

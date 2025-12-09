@@ -1,7 +1,7 @@
 import { state } from '../state';
 import * as webglUtils from "../utils/webgl";
 
-import { FPS, IS_DEV } from '../constants';
+import { CANVAS_H, CANVAS_W, FPS, IS_DEV } from '../constants';
 import { initScene, update } from '../scene';
 
 let RUNNING = false;
@@ -41,8 +41,8 @@ const loop = async (gl: WebGL2RenderingContext) => {
 export const init = () => {
     const canvas = document.createElement('canvas');
     canvas.id = "c";
-    canvas.width = 1000;
-    canvas.height = 600;
+    canvas.width = CANVAS_W;
+    canvas.height = CANVAS_H;
     canvas.style.backgroundColor = "#000";
     canvas.style.transition = IS_DEV ? "height 10ms ease-out" : "height 0.5s ease-out";
     document.querySelector("div.container > div.canvas-container")?.prepend(canvas);

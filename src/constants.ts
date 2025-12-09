@@ -8,7 +8,10 @@ export const TILE_STORE_SIZE = 3;
 export const HISTORY_MAX = 10;
 export const CONSOLE_LINES = 200;
 
-export const IS_DEV = false;
+export const CANVAS_W = 1000;
+export const CANVAS_H = 600;
+
+export const IS_DEV = true;
 
 export type Vec2D = [number, number];
 

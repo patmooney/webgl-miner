@@ -4,12 +4,14 @@ import type { Action } from "../actions";
 import { coordToTile, getTileAt, TILE_NAVIGATE } from "../map";
 import { clamp } from "../utils/maths";
 import { state } from "../state";
+import { cameraCenterOffset } from "../scene";
 
 export const BATTERY_COST = 1;
 const baseSpeed = tileW / 100;
 
 export const command = function(this: Entity, action: Action) {
     if (!action.isStarted) {
+        action.addSound("track_move", cameraCenterOffset(this.coords));
         const moves = 1; // action.value!; - OK we only do a single move per action now, to account for battery
         const value = getMaxMove(moves, this.angle, this.coords);
         if (this.angle === 3) { // UP
@@ -25,6 +27,8 @@ export const command = function(this: Entity, action: Action) {
             this.target = [this.coords[0] - (value * tileW), this.coords[1]];
         }
         action?.start();
+    } else {
+        action.moveSound(cameraCenterOffset(this.coords));
     }
 
     const moveSpeed = this.speed * baseSpeed;

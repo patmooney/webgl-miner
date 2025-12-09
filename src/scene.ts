@@ -1,4 +1,4 @@
-import { size, tileW } from "./constants";
+import { CANVAS_H, CANVAS_W, size, tileW, type Vec2D } from "./constants";
 import type { Entity } from "./entity";
 import { EntityGraphics } from "./graphics/entity";
 import { initCanvas } from "./input";
@@ -48,7 +48,25 @@ export const initScene = async (gl: WebGL2RenderingContext) => {
     state.updateLights();
 };
 
+const C_W2 = CANVAS_W / 2;
+const C_H2 = CANVAS_H / 2;
 
+// return normalised direction based on screen dimensions
+export const cameraCenterOffset = (target: Vec2D): Vec2D => {
+    const cam = state.camera;
+    const center = [cam[0] + C_W2, cam[1] + C_H2];
+    const dx = target[0] - center[0];
+    const dy = target[1] - center[1];
+    const sx = Math.sign(dx);
+    const sy = Math.sign(dy);
+    const ax = Math.abs(dx);
+    const ay = Math.abs(dy);
+
+    return [
+        (ax / C_W2) * sx,
+        (ay / C_H2) * sy,
+    ];
+}
 
 const getStatus = (entity: Entity) => {
     const action = state.actions.getActions().find((a) => a.entityId === entity.id && !a.isComplete && !a.isCancelled);

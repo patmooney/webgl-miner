@@ -158,17 +158,17 @@ export const entityCommand = (entityId: number | undefined, cmd: string, values:
 
     const addAction = (actionType: ActionType) => {
         const intVal = parseInt(value ?? 0);
-        let actions: string[] = [];
+        let subActions: Action[] = [];
         const action = state.actions.addAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal });
-        actions.push(action.id);
         if (actionType === "MOVE" || actionType === "ROTATE" || actionType === "DEVICE") {
             // OK the value for these is how many times to repeat
             for (let i = 1; i < Math.abs(action.value ?? intVal); i++) {
                 const subAction = state.actions.addSilentAction(actionType, { entityId: selected.id, timeEnd: Date.now() + 100000, value: intVal }, action.id)
-                actions.push(subAction.id);
+                subActions.push(subAction);
             }
         }
-        return actions;
+        action.addChildren(subActions);
+        return [action, ...subActions].map((a) => a.id);
     };
 
     if (selected.actions.includes(cmd.toUpperCase() as ActionType)) {

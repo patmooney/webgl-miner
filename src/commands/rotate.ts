@@ -1,12 +1,14 @@
 import type { Action } from "../actions";
 import { ANGLE_TO_RAD, FULL_ROTATION, type Angle } from "../constants";
 import type { Entity } from "../entity";
+import { cameraCenterOffset } from "../scene";
 
 export const BATTERY_COST = 1;
 
 export const command = function (this: Entity, action: Action) {
     let t: number | undefined = this.targetR;
     if (!action.isStarted) {
+        action.addSound("track_move", cameraCenterOffset(this.coords));
         t = this.angle + (action.value! > 0 ? 1 : -1);
         if (t < 0) {
             t = 4 + t;
@@ -15,6 +17,8 @@ export const command = function (this: Entity, action: Action) {
             t = t - 4;
         }
         action.start();
+    } else {
+        action.moveSound(cameraCenterOffset(this.coords));
     }
 
     if (t === undefined) {
