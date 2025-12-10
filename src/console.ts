@@ -7,7 +7,7 @@ import { onKeybind } from "./input";
 import { coordToTile, getTileAt, TILE_TYPE } from "./map";
 import { ScriptExecutor } from "./script";
 import { state } from "./state";
-import { onCraft, type Item, Items, type ItemInfoModule, type ItemInfoCraftable, type ItemInfoInterface, type ItemInfoBase, type Item_Module, start } from "./story";
+import { onCraft, type Item, Items, type ItemInfoModule, type ItemInfoCraftable, type ItemInfoInterface, type ItemInfoBase, type Item_Module, start, onStory, type WayPoint } from "./story";
 import { clearTexMap } from "./utils/webgl";
 
 const output = document.querySelector('#control_console div#output');
@@ -25,7 +25,7 @@ const ConsoleHelp: Record<commandGroup, [commandsType, string, string][]> = {
         ["select", "Select entity for control.", "int"],
         ["selected","Show currently selected entitiy.", ""],
         ["edit", "Edit a script.", "str"],
-        ["bind", "Bind a key to a command Ex. bind <cmd> <args?>", "str"]
+        ["bind", "Bind a key to a command Ex. bind <cmd> <args?>", "str"],
     ],
     Entity: [
         ["commands","List available commands for selected entity.", ""],
@@ -190,6 +190,7 @@ const metaCommand = (cmd: string, values: string[]): boolean | undefined => {
         case "crafting": return command_Crafting(value);
         case "selected": command_Selected(); return true;
         case "dev_spawn": return command_DEV_SPAWN();
+        case "dev_story": return command_DEV_STORY(value);
         case "save": command_Save(); return true;
         case "load": command_Load(); return true;
         case "reset": command_Reset(); return true;
@@ -391,6 +392,14 @@ export const command_DEV_SPAWN = (): boolean | undefined => {
     state.entities.push(e);
     state.updateLights();
     selectEntity(e.id);
+    return true;
+};
+
+export const command_DEV_STORY = (value: string): boolean | undefined => {
+    if (!IS_DEV) {
+        return;
+    }
+    onStory(value as WayPoint);
     return true;
 };
 

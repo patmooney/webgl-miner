@@ -38,13 +38,14 @@ const loop = async (gl: WebGL2RenderingContext) => {
     }
 }
 
-export const init = () => {
+export const init = (skipAnim?: boolean) => {
+    skipAnim = skipAnim || IS_DEV;
     const canvas = document.createElement('canvas');
     canvas.id = "c";
     canvas.width = CANVAS_W;
     canvas.height = CANVAS_H;
     canvas.style.backgroundColor = "#000";
-    canvas.style.transition = IS_DEV ? "height 10ms ease-out" : "height 0.5s ease-out";
+    canvas.style.transition = skipAnim ? "height 10ms ease-out" : "height 0.5s ease-out";
     document.querySelector("div.container > div.canvas-container")?.prepend(canvas);
     return new Promise((initComplete) => {
         setTimeout(() => {

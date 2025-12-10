@@ -19,7 +19,7 @@ export type WayPoint =
 
 export type ItemClass = "INTERFACE" | "MODULE" | "DEPLOYABLE" | "RESOURCE";
 
-export type ItemQuality = "BASIC";
+export type ItemQuality = "COMMON" | "UNCOMMON" | "RARE" | "EPIC" | "LEGENDARY" | "UNIQUE";
 
 export type Item_Resource = "stone" | "iron" | "carbon" | "copper" | "coal";
 export type Item_Module = "module_visual_scanner" | "module_basic_drill" | "module_basic_battery" | "module_basic_motor"  | "module_home_navigation" | "module_basic_store" |
@@ -139,12 +139,12 @@ export const Items: Record<Item, ItemInfoType> = {
     // MODULE
     module_visual_scanner: {
         name: "module_visual_scanner",
-        ingredients: [{ item: "iron", count: 10 }],
+        ingredients: [{ item: "iron", count: 5 }],
         story: ["IRON_FIRST"],
         description: "Visually assess one tile in front",
         type: "MODULE",
-        label: "Visual Scanner (Module)",
-        quality: "BASIC",
+        label: "Visual Scanner",
+        quality: "UNCOMMON",
         moduleType: "navigation",
         deviceType: "visual_scanner",
         stats: {},
@@ -158,8 +158,8 @@ export const Items: Record<Item, ItemInfoType> = {
         story: ["IRON_FIRST"],
         description: "A very simple battery with limited capacity",
         type: "MODULE",
-        label: "Basic Battery (Module)",
-        quality: "BASIC",
+        label: "Basic Battery",
+        quality: "COMMON",
         moduleType: "battery",
         stats: { battery: 100, rechargeSpeed: 1 },
         actionType: ["RECHARGE"]
@@ -172,8 +172,8 @@ export const Items: Record<Item, ItemInfoType> = {
         story: ["IRON_FIRST"],
         description: "A brittle, dull drill",
         type: "MODULE",
-        label: "Basic Drill (Module)",
-        quality: "BASIC",
+        label: "Basic Drill",
+        quality: "COMMON",
         moduleType: "device",
         deviceType: "drill",
         stats: { drillSpeed: 1, drillPower: 1 },
@@ -188,8 +188,8 @@ export const Items: Record<Item, ItemInfoType> = {
         story: ["IRON_FIRST"],
         description: "5hp of pure disappointment",
         type: "MODULE",
-        label: "Basic Motor (Module)",
-        quality: "BASIC",
+        label: "Basic Motor",
+        quality: "COMMON",
         moduleType: "engine",
         stats: { speed: 1 },
         actionType: ["MOVE", "ROTATE"]
@@ -204,7 +204,7 @@ export const Items: Record<Item, ItemInfoType> = {
         description: "10 slot store",
         type: "MODULE",
         label: "Basic Store",
-        quality: "BASIC",
+        quality: "COMMON",
         moduleType: "store",
         stats: { inventorySize: 10 },
         actionType: ["UNLOAD"]
@@ -218,8 +218,8 @@ export const Items: Record<Item, ItemInfoType> = {
         story: ["CARBON_FIRST", "COPPER_FIRST"],
         description: "Provides automated routing to nearest base",
         type: "MODULE",
-        label: "Home Navigation (Module)",
-        quality: "BASIC",
+        label: "Home Navigation",
+        quality: "RARE",
         moduleType: "navigation",
         stats: {}
     },
@@ -228,7 +228,7 @@ export const Items: Record<Item, ItemInfoType> = {
         name: "module_dev",
         type: "MODULE",
         label: "DEV DEV DEV",
-        quality: "BASIC",
+        quality: "COMMON",
         description: "DEV DEV DEV",
         moduleType: "engine",
         stats: { battery: 10_000, drillSpeed: 10, speed: 10, inventorySize: 10_000, rechargeSpeed: 10, drillPower: 10 },
@@ -241,7 +241,7 @@ export const Items: Record<Item, ItemInfoType> = {
         name: "module_dev_drill",
         type: "MODULE",
         label: "DEV DEV DEV",
-        quality: "BASIC", 
+        quality: "COMMON", 
         description: "DEV DEV DEV",
         moduleType: "device",
         ingredients: [],
@@ -257,10 +257,10 @@ export const Items: Record<Item, ItemInfoType> = {
             { item: "iron", count: 10 }
         ],
         story: ["IRON_FIRST"],
-        description: "An empty mining automation hull (deployable)",
+        description: "An empty mining automation hull",
         type: "DEPLOYABLE",
         label: "Basic Automation Hull",
-        quality: "BASIC"
+        quality: "COMMON"
     },
 };
 
@@ -268,7 +268,7 @@ export const onStorage = (item: Item, count: number) => {
     if (count < 0) {
         return;
     }
-    if (!state.story.STORAGE_FIRST) {
+    if (!state.story.STORAGE_FIRST && Items[item].type === "RESOURCE") {
         state.addWaypoint("STORAGE_FIRST");
     }
     if (item === "iron" && !state.story.IRON_FIRST) {
@@ -331,6 +331,7 @@ export const onStory = (waypoint: WayPoint) => {
         case "STORAGE_FIRST":
             csl.printImportant(`Crafting Unlocked
 see command "crafting" for more information`);
+            state.nav.addNav("crafting");
             break;
         case "IRON_FIRST": 
             csl.printImportant(`New recipes available`);

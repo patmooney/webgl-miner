@@ -94,7 +94,7 @@ div.editor_modal {
 
 div.control {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
 }
 
 div.canvas-container {
@@ -105,7 +105,7 @@ div.canvas-container {
 
 div#context {
     flex-grow: 1;
-    background-color: black;
+    background-color: #080808;
     height: 300px;
     color: white;
 }
@@ -116,13 +116,15 @@ div#context {
 
 div#nav {
     display: flex;
-    flex-direction: column;
-    background: black;
+    gap: 0.5rem;
+    flex-direction: row;
+    background: #080808;
     padding: 0.5rem;
-    border-left: solid 1px #333;
+    border: solid 1px #111;
 }
 
 div#nav > div {
+    border-radius: 5px;
     text-align: center;
     background: black;
     color: white;
@@ -169,11 +171,12 @@ div.justified {
 }
 
 div#control_console {
-    background-color: black;
+    background-color: #080808;
     box-sizing: border-box;
     height: 300px;
     display: flex;
     flex-direction: column;
+    border: solid 1px #111;
 }
 
 div#control_console > div#output {
@@ -227,7 +230,6 @@ div.bang {
     display: flex;
     width: 100%;
     box-sizing: border-box;
-    border-top: solid 1px #333;
     color: #55ff55;
     font-weight: 500;
     padding: .5rem;
@@ -236,7 +238,7 @@ div.bang {
 
 div.bang > input {
     flex: 1;
-    background-color: black;
+    background-color: #080808;
     border: none;
     color: #55ff55;
     font-weight: bold;
@@ -277,4 +279,65 @@ p.white {
 
 p.black {
     color: black;
+}
+
+div#screen-modal {
+    z-index: 10;
+    position: absolute;
+    width: 950px;
+    height: 500px;
+    left: 25px;
+    top: 50px;
+    border: solid 1px #333;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.8);
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+div.interface-crafting {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    padding: 1rem;
+    & > div.list {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        gap: .5rem;
+        padding: 20px;
+    }
+    & > div.info {
+        color: white;
+    }
+    & div.recipe {
+        border-radius: 2px;
+        background-color: #222;
+        color: white;
+        display: flex;
+        flex-direction: row;
+        gap: .5rem;
+        padding: .5rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        & > div:last-child {
+            white-space: nowrap;
+        }
+    }
+    & div.recipe[data-quality="COMMON"] {
+        border: solid 2px gray;
+    }
+
+    & div.recipe[data-quality="UNCOMMON"] {
+        border: solid 2px #282;
+    }
+
+    & div.recipe[data-quality="RARE"] {
+        border: solid 2px #228;
+    }
+
+    & div.recipe.selected {
+        transform: translate(10px, 0px);
+        outline: solid 3px #FFFF77;
+    }
 }

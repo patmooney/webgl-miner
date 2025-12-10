@@ -5,6 +5,7 @@ import { Entity } from "./entity";
 import type { EntityGraphics } from "./graphics/entity";
 import { Inventory } from "./invent";
 import { coordToTile, resetMap, updateMap, type Tile } from "./map";
+import { Nav } from "./nav";
 import type { Script, ScriptExecutor } from "./script";
 import type { Item, WayPoint } from "./story";
 import { clamp } from "./utils/maths";
@@ -37,6 +38,7 @@ class State {
     onStory?: (waypoint: WayPoint) => void;
     onDeploy?: (item: Item, name?: string) => void;
     scripts: Record<string, Script>;
+    nav: Nav;
 
     keybinds: KeyboardBind[];
 
@@ -70,6 +72,7 @@ class State {
             story: save.story ?? this.story,
             history: save.history ?? this.history,
             scripts: save.scripts ?? this.scripts,
+            nav: Object.assign(new Nav(), save.nav ?? {})
         });
         this.inventory.inventory = save.inventory ?? this.inventory.inventory;
         if (this.entityGfx) {
@@ -125,6 +128,7 @@ class State {
         this.story = {};
         this.scripts = {};
         this.keybinds = [];
+        this.nav = new Nav();
     }
 
     constructor(actions = new Actions(), inventory = new Inventory(), onStory?: (waypoint: WayPoint) => void) {
@@ -135,6 +139,7 @@ class State {
         this.entityHook = new EventTarget();
         this.scripts = {};
         this.keybinds = [];
+        this.nav = new Nav();
     }
     selectEntity(id: number) {
         if (this.focusEntity(id)) {
