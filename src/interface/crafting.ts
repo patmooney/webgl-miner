@@ -1,7 +1,8 @@
 import "./crafting.style.css";
-import { Items, type Item, type ItemInfoCraftable, type ItemInfoModule } from "../story";
+import { Items, type Item, type ItemInfoModule } from "../story";
 import scanner from "../assets/satellite-dish.png";
 import Alpine from "alpinejs";
+import { command_Crafting } from "../console";
 
 const tpl = `
     <div class="interface-crafting" x-data="recipes">
@@ -19,7 +20,7 @@ const tpl = `
         <div class="info">
             <template x-if="info">
               <div>
-                <div x-text="info.label"></div>
+                <div x-text="info.label" :class="info.className"></div>
                 <div x-text="info.description"></div>
                 <div class="flex-row gap crafting-material">
                     <template x-for="ingredient in info.ingredients">
@@ -28,7 +29,7 @@ const tpl = `
                       </div>
                     </template>
                 </div>
-                <div x-show="$store.inventory.craftable[info.name]">
+                <div x-show="$store.inventory.craftable[info.name]" @click="craft(info.name)">
                     <button>Craft</button>
                 </div>
               </div>
@@ -44,6 +45,9 @@ export const display_Crafting = (modal: HTMLDivElement) => {
         "deployable_automation_hull"];
 
     Alpine.data("recipes", () => ({
+        craft(item: Item) {
+            command_Crafting(item);
+        },
         click(item: Item) {
             this.item = item as any;
         },
@@ -59,7 +63,11 @@ export const display_Crafting = (modal: HTMLDivElement) => {
         ),
         get info() {
             if (this.item) {
-                return Items[this.item]
+                const info = Items[this.item] as object & { quality: string };
+                return {
+                    ...info,
+                    className: `quality-${info.quality.toLowerCase()}`
+                };
             }
             return undefined;
         }

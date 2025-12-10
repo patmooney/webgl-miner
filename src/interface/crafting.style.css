@@ -50,3 +50,13 @@ div.interface-crafting {
         outline: solid 3px #FFFF77;
     }
 }
+
+div.quality-common {
+    color: gray;
+}
+div.quality-uncommon {
+    color: #282;
+}
+div.quality-rare {
+    color: #228;
+}
