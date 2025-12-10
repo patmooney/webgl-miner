@@ -7,6 +7,9 @@ export type NavInfo = {
     display: () => void;
 }
 
+export const NAV_EVENT = "NAV_EVENT";
+export type NavEventType = NavType;
+
 const navBar = document.getElementById("nav");
 const screenModal = document.getElementById("screen-modal") as HTMLDivElement;
 
@@ -26,7 +29,9 @@ export const Navs: Record<NavType, NavInfo> = {
 export class Nav {
     navs: NavType[];
     selected: NavType;
+    hook: EventTarget;
     constructor() {
+        this.hook = new EventTarget();
         this.navs = [];
         this.addNav("terminal");
         this.navTo("terminal");
@@ -45,6 +50,7 @@ export class Nav {
             Array.from(navBar?.querySelectorAll("div") ?? []).forEach((el) => el.classList.remove("active"));
             navBar?.querySelector(`div[data-nav="${nav}"]`)?.classList.add("active");
             this.selected = nav;
+            this.hook.dispatchEvent(new CustomEvent(NAV_EVENT, { detail: nav }));
             Navs[nav].display();
         }
     }

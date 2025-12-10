@@ -1,4 +1,5 @@
-import { Items, type Item, type ItemInfoModule } from "../story";
+import "./crafting.style.css";
+import { Items, type Item, type ItemInfoCraftable, type ItemInfoModule } from "../story";
 import scanner from "../assets/satellite-dish.png";
 import Alpine from "alpinejs";
 
@@ -20,12 +21,16 @@ const tpl = `
               <div>
                 <div x-text="info.label"></div>
                 <div x-text="info.description"></div>
-                <template x-for="ingredient in info.ingredients">
-                  <div x-data="ingredient">
-                    <span x-text="item"></span>
-                    <span x-text="count"></span>
-                  </div>
-                </template>
+                <div class="flex-row gap crafting-material">
+                    <template x-for="ingredient in info.ingredients">
+                      <div :class="($store.inventory.items[ingredient.item] ?? 0) >= ingredient.count ? 'available' : ''">
+                        <span x-text="ingredient.item"></span>[<span x-text="ingredient.count"></span>]
+                      </div>
+                    </template>
+                </div>
+                <div x-show="$store.inventory.craftable[info.name]">
+                    <button>Craft</button>
+                </div>
               </div>
             </template>
         </div>

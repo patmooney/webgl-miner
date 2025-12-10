@@ -8,6 +8,8 @@ import * as csl from "./console";
 import { IS_DEV } from './constants';
 import { sound } from './sound';
 import { interface_Start } from './interface/start';
+import { state } from './state';
+import { INVENTORY_EVENT } from './invent';
 
 const welcome = document.getElementById("welcome-modal");
 
@@ -25,6 +27,29 @@ export const start = async () => {
     }
 
     story.onStory("STORAGE_FIRST");
+
+    Alpine.store("inventory", {
+        items: state.inventory.inventory,
+        craftable: {}
+    });
+
+    state.inventory.hook.addEventListener(INVENTORY_EVENT, () => {
+        const craftable = Object.values(story.Items)
+            .filter((i) => (i as story.ItemInfoCraftable).ingredients?.length)
+            .reduce<{ [key in story.Item]?: boolean }>(
+                (acc, i) => {
+                    acc[i.name] = (i as story.ItemInfoCraftable).ingredients.every(
+                        (ing) => (state.inventory.inventory[ing.item] ?? 0) >= ing.count
+                    );
+                    return acc;
+                }, {}
+            );
+ 
+        Alpine.store("inventory", {
+            items: state.inventory.inventory,
+            craftable
+        });
+    });
 
     setInterval(() => {
         csl.command_Save();

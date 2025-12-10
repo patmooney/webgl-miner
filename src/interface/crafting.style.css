@@ -1,0 +1,52 @@
+div.interface-crafting {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    padding: 1rem;
+    & > div.list {
+        display: flex;     
+        flex-direction: column;
+        overflow-y: auto;  
+        gap: .5rem;      
+        padding: 20px;   
+    }
+    & > div.info {       
+        color: white;
+        & div.crafting-material {
+            color: red;
+        }
+        & div.crafting-material > div.available {
+            color: green;
+        }
+    }
+    & div.recipe {       
+        border-radius: 2px;
+        background-color: #222;
+        color: white;    
+        display: flex;
+        flex-direction: row;
+        gap: .5rem;
+        padding: .5rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        & > div:last-child {
+            white-space: nowrap;
+        }
+    }
+    & div.recipe[data-quality="COMMON"] {
+        border: solid 2px gray;
+    }
+
+    & div.recipe[data-quality="UNCOMMON"] {
+        border: solid 2px #282;
+    }
+
+    & div.recipe[data-quality="RARE"] {
+        border: solid 2px #228;
+    }
+
+    & div.recipe.selected {
+        transform: translate(10px, 0px);
+        outline: solid 3px #FFFF77;
+    }
+}

@@ -1,13 +1,16 @@
 import type { Item } from "./story";
 
+export const INVENTORY_EVENT = "INVENTORY_EVENT";
+export type InventoryEventType = [Item, number];
+
 export class Inventory {
     inventory: { [key in Item]?: number } = {};
     limit?: number;
     total: number;
-    hook?: (item: Item, count: number) => void;
+    hook: EventTarget;
 
-    constructor(hook?: (item: Item, count: number) => void, limit?: number) {
-        this.hook = hook;
+    constructor(limit?: number) {
+        this.hook = new EventTarget();
         this.limit = limit;
         this.total = 0;
     }
@@ -21,14 +24,14 @@ export class Inventory {
         }
         this.total += count;
         this.inventory[item] = (this.inventory[item] ?? 0) + count;
-        this.hook?.(item, count);
+        this.hook.dispatchEvent(new CustomEvent(INVENTORY_EVENT, { detail: [item, count] }));
     }
 
     remove(item: Item, count = 1) {
         if ((this.inventory[item] ?? 0) >= count) {
             this.inventory[item] = this.inventory[item]! - count;
             this.total -= count;
-            this.hook?.(item, -count);
+            this.hook.dispatchEvent(new CustomEvent(INVENTORY_EVENT, { detail: [item, -count] }));
             if (!this.inventory[item]) {
                 delete this.inventory[item];
             }

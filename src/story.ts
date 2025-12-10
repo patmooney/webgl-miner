@@ -6,6 +6,7 @@ import { Entity, type IEntityStats } from "./entity";
 import type { ActionType } from "./actions";
 import { Script } from "./script";
 import { IS_DEV } from "./constants";
+import { INVENTORY_EVENT, type InventoryEventType } from "./invent";
 
 export type WayPoint =
     "STORAGE_FIRST" |
@@ -264,7 +265,8 @@ export const Items: Record<Item, ItemInfoType> = {
     },
 };
 
-export const onStorage = (item: Item, count: number) => {
+export const onStorage = (e: Event) => {
+    const [item, count] = (e as CustomEvent).detail as InventoryEventType;
     if (count < 0) {
         return;
     }
@@ -411,7 +413,7 @@ Useful commands: storage, deploy`);
         state.updateLights();
     }
 
-    state.inventory.hook = onStorage;
+    state.inventory.hook.addEventListener(INVENTORY_EVENT, onStorage);
     state.onStory = onStory;
     state.onDeploy = onDeploy;
 };

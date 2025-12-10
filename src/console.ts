@@ -189,14 +189,20 @@ const metaCommand = (cmd: string, values: string[]): boolean | undefined => {
         case "clear": command_Clear(); return true;
         case "crafting": return command_Crafting(value);
         case "selected": command_Selected(); return true;
-        case "dev_spawn": return command_DEV_SPAWN();
-        case "dev_story": return command_DEV_STORY(value);
         case "save": command_Save(); return true;
         case "load": command_Load(); return true;
         case "reset": command_Reset(); return true;
         case "edit": command_Edit(value); return true;
         case "bind": command_Bind(values); return true;
     };
+
+    if (IS_DEV) {
+        switch (cmd) {
+            case "dev_spawn": return command_DEV_SPAWN();
+            case "dev_story": return command_DEV_STORY(value);
+            case "dev_invent": return command_DEV_INVENT(values);
+        }
+    }
 
     if (entityCommands.includes(cmd)) {
         const selected = state.selectedEntity !== undefined ? state.entities.find((e) => e.id === state.selectedEntity) : undefined;
@@ -402,6 +408,15 @@ export const command_DEV_STORY = (value: string): boolean | undefined => {
     onStory(value as WayPoint);
     return true;
 };
+
+export const command_DEV_INVENT = (values: string[]): boolean | undefined => {
+    const [item, rawCount] = values;
+    const count = parseInt(rawCount ?? "1") || 1;
+    if (Items[item as Item]) {
+        state.inventory.add(item as Item, count);
+    }
+    return true;
+}
 
 export const command_Crafting = (recipe?: string) => {
     if (!state.story.STORAGE_FIRST) {

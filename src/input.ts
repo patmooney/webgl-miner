@@ -4,7 +4,7 @@ import * as csl from "./console";
 import { HISTORY_MAX } from "./constants";
 
 let dragStart: Vec2D | undefined;
-const input = document.querySelector('#control_console input');
+const input = document.querySelector('#control_console input') as HTMLInputElement;
 
 let historyIdx = HISTORY_MAX;
 
@@ -23,16 +23,16 @@ export const init = () => {
             if (historyIdx > 0) {
                 const history = state.getHistory();
                 historyIdx--;
-                (input as HTMLInputElement).value = history[historyIdx] ?? "";
+                input.value = history[historyIdx] ?? "";
             }
         }
         if (key === "ArrowDown") {
             const history = state.getHistory();
             if (historyIdx >= history.length) {
-                (input as HTMLInputElement).value = "";
+                input.value = "";
             } else {
                 historyIdx++;
-                (input as HTMLInputElement).value = history[historyIdx] ?? "";
+                input.value = history[historyIdx] ?? "";
             }
         }
     });
@@ -41,13 +41,29 @@ export const init = () => {
 
     document.querySelector("#nav > div:first-of-type")?.addEventListener("click", (e) => onNav(e.target as HTMLDivElement, "control_console"));
     document.addEventListener("keyup", (e) => {
+        if (e.key === "Escape") {
+            input?.classList.add("hidden");
+        }
         if (document.activeElement === input) {
             return;
+        }
+        if (e.key === "Enter") {
+            input?.classList.remove("hidden");
+            input?.focus();
         }
         const kb = state.keybinds.find((kb) => kb.key === e.key);
         if (kb) {
             csl.parseCmd(kb.exec);
         }
+    });
+
+    document.querySelector("div.bang")?.addEventListener("click", () => {
+        input?.classList.remove("hidden");
+        input?.focus();
+    });
+
+    input?.addEventListener("focusout", () => {
+        input.classList.add("hidden");
     });
 };
 

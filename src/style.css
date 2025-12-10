@@ -227,6 +227,7 @@ div#output > p.warning {
 }
 
 div.bang {
+    cursor: text;
     display: flex;
     width: 100%;
     box-sizing: border-box;
@@ -234,13 +235,16 @@ div.bang {
     font-weight: 500;
     padding: .5rem;
     gap: .5rem;
+    height: 3rem;
+    align-items: center;
 }
 
 div.bang > input {
     flex: 1;
-    background-color: #080808;
+    background-color: #2b882b;
     border: none;
-    color: #55ff55;
+    color: white;
+    padding: 0.5rem;
     font-weight: bold;
 }
 
@@ -293,51 +297,4 @@ div#screen-modal {
     background-color: rgba(0, 0, 0, 0.8);
     overflow-x: hidden;
     overflow-y: scroll;
-}
-
-div.interface-crafting {
-    display: flex;
-    flex-direction: row;
-    gap: 2rem;
-    padding: 1rem;
-    & > div.list {
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-        gap: .5rem;
-        padding: 20px;
-    }
-    & > div.info {
-        color: white;
-    }
-    & div.recipe {
-        border-radius: 2px;
-        background-color: #222;
-        color: white;
-        display: flex;
-        flex-direction: row;
-        gap: .5rem;
-        padding: .5rem;
-        font-size: 0.8rem;
-        cursor: pointer;
-        & > div:last-child {
-            white-space: nowrap;
-        }
-    }
-    & div.recipe[data-quality="COMMON"] {
-        border: solid 2px gray;
-    }
-
-    & div.recipe[data-quality="UNCOMMON"] {
-        border: solid 2px #282;
-    }
-
-    & div.recipe[data-quality="RARE"] {
-        border: solid 2px #228;
-    }
-
-    & div.recipe.selected {
-        transform: translate(10px, 0px);
-        outline: solid 3px #FFFF77;
-    }
 }
