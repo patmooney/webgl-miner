@@ -1,0 +1,81 @@
+div.editor-parent {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    padding: 1rem;
+    box-sizing: border-box;
+    & div.editor-name {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        margin-bottom: .5rem;
+        & input {
+            flex-grow: 1;
+            box-sizing: border-box;
+            padding: .5rem;
+        }
+        & button.danger {
+            background-color: #FF8888;
+        }
+    }
+}
+div#editor-container {
+    display: flex;
+    position: relative;
+    flex-direction: row;
+    flex-grow: 1;
+    overflow-y: scroll;
+    & textarea {
+        resize: none;
+        font-size: 1rem;
+        line-height: 1.2rem;
+        flex-grow: 1;
+    }
+    & textarea:focus {
+        outline: none;
+    }
+}
+div#editor {
+    position: absolute;
+    z-index: 100;
+    overflow-y: hidden;
+    width: 100%;
+    text-align: right;
+    padding-right: 1rem;
+    box-sizing: border-box;
+    font-size: 1rem;
+    line-height: 1.2rem;
+    color: #aaa;
+    pointer-events: none;
+    & span.w {
+        margin-right: .3rem;
+    }
+    & span.err {
+        background-color: red;
+        width: 17px;
+        border-radius: 100px;
+        display: inline-block;
+        text-align: center;
+        font-weight: bold;
+        color: yellow;
+        margin-right: 5px;
+    }
+    & div {
+        padding: 0;
+        margin: 0;
+        & .err-line {
+            position: absolute;
+            left: 0px;
+            width: 100%;
+            background-color: red;
+            opacity: 0.1;
+            height: 1.235rem;
+        }
+    }
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox, Safari 18.2+, Chromium 121+ */
+}
+div#editor::-webkit-scrollbar {
+    display: none;  /* Older Safari and Chromium */
+}

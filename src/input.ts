@@ -41,6 +41,9 @@ export const init = () => {
 
     document.querySelector("#nav > div:first-of-type")?.addEventListener("click", (e) => onNav(e.target as HTMLDivElement, "control_console"));
     document.addEventListener("keyup", (e) => {
+        if (state.nav.selected !== "terminal") {
+            return;
+        }
         if (e.key === "Escape") {
             input?.classList.add("hidden");
         }

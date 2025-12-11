@@ -20,6 +20,24 @@ export type Memory = `M_${number}`;
 export type LineType = [Syntax | Label, string[]];
 
 export type ValidationType = "number_memory" | "label" | "memory" | "number" | "any" | "memory_or_null";
+
+export type ValidationErr = {
+    lineIdx: number;
+    validationType: "arg" | "command" | "label";
+    expectedArgument?: string;
+    argIdx?: number;
+    description: string;
+}
+
+export const ValidationErrors: Record<ValidationType, string> = {
+    "number": "Expected number",
+    "number_memory": "Expected number or memory address",
+    "label": "Expected label name",
+    "memory": "Expected memory address",
+    "memory_or_null": "Expected memory address or nothing",
+    "any": ""
+};
+
 export const validation: Record<Syntax, ValidationType[] | undefined> = {
     "RUN": ["any", "any", "memory_or_null"],
     "JMP": ["label"],
@@ -33,6 +51,12 @@ export const validation: Record<Syntax, ValidationType[] | undefined> = {
     "ADD": ["number_memory", "number_memory", "memory"],
     "DIV": ["number_memory", "number_memory", "memory"],
     "MOD": ["number_memory", "number_memory", "memory"]
+};
+
+export type ValidationResult = {
+    errors: ValidationErr[],
+    lines: LineType[];
+    labels: Record<string, number>;
 };
 
 export const labelRe = /^[A-Za-z][A-Za-z_0-9]*\:/;
@@ -59,11 +83,11 @@ export const Errors: Record<ErrorType, string> = {
     "DUPLICATE_LABEL": "Label is used more than once"
 };
 
-export const parse = (script: string): [LineType[], [number,ErrorType,[number, ValidationType]?][], Record<string, number>] => {
+export const parse = (script: string): ValidationResult => {
     const lines = script.split("\n");
 
     const labelsMap: Record<string, number> = {};
-    const unknownErrs = lines.reduce<[number, ErrorType][]>(
+    const unknownErrs = lines.reduce<ValidationErr[]>(
         (acc, line, idx) => {
             line = line.replace(/#.+/g,"").trim();
             if (!line) {
@@ -71,13 +95,21 @@ export const parse = (script: string): [LineType[], [number,ErrorType,[number, V
             }
             const [cmd] = line.split(" ");
             if (!validation[cmd as Syntax] && !labelRe.test(cmd)) {
-                acc.push([idx, "UNKNOWN"]);
+                acc.push({
+                    lineIdx: idx,
+                    validationType: "command",
+                    description: `Unknown command`
+                });
                 return acc;
             }
             if (labelRe.test(cmd)) {
                 const labelCmd = cmd.replace(/:$/, "");
                 if (labelsMap[labelCmd]) {
-                    acc.push([idx, "DUPLICATE_LABEL"]);
+                    acc.push({
+                        lineIdx: idx,
+                        validationType: "label",
+                        description: `Reference to unknown label ${cmd}`
+                    });
                     return acc;
                 } else {
                     labelsMap[labelCmd] = idx;
@@ -87,7 +119,7 @@ export const parse = (script: string): [LineType[], [number,ErrorType,[number, V
         }, []
     );
 
-    const errors = lines.reduce<[number, ErrorType, [number, ValidationType]?][]>(
+    const errors = lines.reduce<ValidationErr[]>(
         (acc, line, idx) => {
             line = line.replace(/#.+/g,"").trim();
             if (!line) {
@@ -104,13 +136,15 @@ export const parse = (script: string): [LineType[], [number,ErrorType,[number, V
                     // No validation then no problem
                     return acc;
                 }
-                if (args.length !== v.length) {
-                    acc.push([idx, "INVALID"]);
-                    return acc;
-                }
                 for (let argIdx = 0; argIdx < args.length; argIdx++) {
                     if (!validationFn[v[argIdx]]({ labels: Object.keys(labelsMap) }, args[argIdx])) {
-                        acc.push([idx, "INVALID",[argIdx, v[argIdx]]]);
+                        acc.push({
+                            lineIdx: idx,
+                            validationType: "arg",
+                            expectedArgument: v[argIdx],
+                            description: ValidationErrors[v[argIdx]],
+                            argIdx
+                        });
                     }
                 }
             }
@@ -127,5 +161,9 @@ export const parse = (script: string): [LineType[], [number,ErrorType,[number, V
             }
         );
 
-    return [errors.length ? [] : filtered as LineType[], errors, labelsMap];
+    return {
+        errors,
+        lines: filtered,
+        labels: labelsMap
+    }
 };

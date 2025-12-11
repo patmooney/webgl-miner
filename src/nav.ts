@@ -1,6 +1,7 @@
-export type NavType = "terminal" | "crafting";
 import { display_Crafting } from "./interface/crafting";
+import { display_Editor } from "./interface/editor";
 
+export type NavType = "terminal" | "crafting" | "editor";
 export type NavInfo = {
     name: NavType;
     label: string;
@@ -23,6 +24,11 @@ export const Navs: Record<NavType, NavInfo> = {
         name: "crafting",
         label: "Crafting",
         display: () => display_Crafting(screenModal!)
+    },
+    editor: {
+        name: "editor",
+        label: "Scripts",
+        display: () => display_Editor(screenModal!)
     }
 };
 
@@ -34,6 +40,7 @@ export class Nav {
         this.hook = new EventTarget();
         this.navs = [];
         this.addNav("terminal");
+        this.addNav("editor");
         this.navTo("terminal");
         this.selected = "terminal";
     }

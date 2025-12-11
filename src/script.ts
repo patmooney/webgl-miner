@@ -1,7 +1,7 @@
 import { Action, ACTION_COMPLETE_EVENT } from "./actions";
 import type { Entity } from "./entity";
 import { ScriptCommands } from "./script/commands";
-import { isLabel, parse, type LineType, type Memory, type ValidationType } from "./script/validation";
+import { isLabel, parse, type LineType, type Memory, type ValidationErr } from "./script/validation";
 import { state } from "./state";
 
 // comments start with #
@@ -14,10 +14,10 @@ export class Script {
     name: string;
     lines: LineType[];
     content: string;
-    errors: [number, string, [number, ValidationType]?][];
+    errors: ValidationErr[];
     labels: Record<string, number>;
     constructor(name: string, script: string) {
-        const [lines, errors, labels] = parse(script);
+        const { lines, errors, labels } = parse(script);
         this.name = name;
         this.labels = labels;
         this.lines = lines;
